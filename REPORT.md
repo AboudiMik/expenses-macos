@@ -16,7 +16,7 @@ Native macOS expense tracker with AI extraction and an AI chat assistant. Built 
 | Quality and cost | Model routing (Haiku 5.5 for extraction, Sonnet 5.5 for chat), token usage per answer and per session, an Evaluation window with extraction and agent tests and Markdown export |
 | Tooling | Sample invoice generator with ground truth, dataset preparation script, release script |
 
-About 2,400 lines of Swift in 31 files, each under 200 lines, plus three Python tools.
+About 2,900 lines of Swift in 36 files, each under 200 lines, plus three Python tools.
 
 ## 2. How it works
 
