@@ -39,7 +39,6 @@ struct InvoicesView: View {
         } message: {
             Text(importer.failures.map { "\($0.fileName): \($0.message)" }.joined(separator: "\n"))
         }
-        .frame(minWidth: 760, minHeight: 420)
     }
 
     private var failuresShown: Binding<Bool> {
