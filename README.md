@@ -65,6 +65,18 @@ From the release zip: unzip `dist/Expenses.zip`, then **right-click Expenses.app
 
 To rebuild the release: `tools/release.sh`.
 
+### For reviewers
+
+The app needs a Claude API key, which is sent to you separately from this zip and repository. It is a temporary key in a capped workspace and will be revoked after the review, so it is safe to try freely.
+
+1. Unzip `Expenses.zip`, right-click **Expenses.app** → **Open**, confirm.
+2. On the welcome sheet click **Open Settings** (or press ⌘,), paste the key, click **Save key**. It is stored in your Keychain; nothing is written to disk in plain text.
+3. Click **Import** and pick a few PDFs from `tools/samples`, then try the chat: "How much did I spend last month?", "Show my spending by category for all time", "What did I buy from Nahdi Pharmacy?"
+4. Click the microphone, say a question, click stop. Allow microphone and speech recognition when macOS asks.
+5. **Tools → Evaluation…** runs the extraction test on `tools/eval_images` and the agent test, and exports a Markdown report.
+
+The sample PDFs are generated and fictional; the evaluation receipts are synthetic documents from the Bayanat Labs dataset (CC BY 4.0).
+
 ## Features
 
 - **Import**: PDFs and images (PNG, JPEG, HEIC and more), three at a time with progress. Text PDFs are read with PDFKit; scans and photos go to Claude as images.
