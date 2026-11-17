@@ -47,3 +47,6 @@ dist/
 .env
 .env.*
 *.local
+
+# Downloaded datasets (large, re-fetch with tools/prepare_eval.py notes)
+tools/dataset/

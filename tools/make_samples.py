@@ -6,6 +6,7 @@ last 14 months; categories rotate through the app's eight categories.
 Run with a fixed seed so the output is reproducible.
 """
 import argparse
+import json
 import random
 from datetime import date, timedelta
 from pathlib import Path
@@ -215,13 +216,20 @@ def main():
         old.unlink()
     width = max(2, len(str(args.count)))
     dates = spread_dates(rng, args.count, months=args.months)
+    truth = {}
     for i, inv_date in enumerate(dates):
         inv = build_invoice(rng, i, inv_date)
         slug = inv["vendor"].lower().replace(" ", "_").replace(".", "")
         path = args.out / f"{i + 1:0{width}d}_{inv_date.isoformat()}_{slug}.pdf"
         draw_invoice(path, inv)
+        truth[path.name] = {
+            "vendor": inv["vendor"], "vatNumber": inv["vat_number"], "invoiceNumber": inv["invoice_number"],
+            "date": inv_date.isoformat(), "subtotal": inv["subtotal"], "vatAmount": inv["vat"],
+            "total": inv["total"], "currency": "SAR", "category": inv["category"],
+        }
         print(f"{path.name}  {inv['category']:<10} {sar(inv['total'])}")
-    print(f"\n{args.count} invoices written to {args.out}")
+    (args.out / "ground_truth.json").write_text(json.dumps(truth, indent=2))
+    print(f"\n{args.count} invoices and ground_truth.json written to {args.out}")
 
 
 if __name__ == "__main__":

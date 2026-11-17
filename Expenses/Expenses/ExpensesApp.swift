@@ -21,9 +21,26 @@ struct ExpensesApp: App {
                 .environment(appState)
         }
         .modelContainer(sharedModelContainer)
+        .commands {
+            CommandGroup(after: .toolbar) { EvaluationMenuItem() }
+        }
+
+        Window("Evaluation", id: "evaluation") {
+            EvaluationView()
+                .environment(appState)
+        }
+        .modelContainer(sharedModelContainer)
 
         Settings {
             SettingsView()
         }
+    }
+}
+
+private struct EvaluationMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Button("Evaluation…") { openWindow(id: "evaluation") }
+            .keyboardShortcut("E", modifiers: [.command, .shift])
     }
 }

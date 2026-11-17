@@ -1,0 +1,167 @@
+{
+  "01_2025-09-26_al_baik_restaurant.pdf": {
+    "vendor": "Al Baik Restaurant",
+    "vatNumber": "364556815188443",
+    "invoiceNumber": "INV-2025-8494",
+    "date": "2025-09-26",
+    "subtotal": 194.2,
+    "vatAmount": 29.13,
+    "total": 223.33,
+    "currency": "SAR",
+    "category": "Food"
+  },
+  "02_2025-11-04_uber_saudi.pdf": {
+    "vendor": "Uber Saudi",
+    "vatNumber": "346978809320813",
+    "invoiceNumber": "INV-2025-8035",
+    "date": "2025-11-04",
+    "subtotal": 1408.88,
+    "vatAmount": 211.33,
+    "total": 1620.21,
+    "currency": "SAR",
+    "category": "Transport"
+  },
+  "03_2025-12-02_mobily.pdf": {
+    "vendor": "Mobily",
+    "vatNumber": "387663440029783",
+    "invoiceNumber": "INV-2025-9020",
+    "date": "2025-12-02",
+    "subtotal": 2782.65,
+    "vatAmount": 417.4,
+    "total": 3200.05,
+    "currency": "SAR",
+    "category": "Utilities"
+  },
+  "04_2026-01-09_saco_stores.pdf": {
+    "vendor": "Saco Stores",
+    "vatNumber": "378472671475133",
+    "invoiceNumber": "INV-2026-7738",
+    "date": "2026-01-09",
+    "subtotal": 244.86,
+    "vatAmount": 36.73,
+    "total": 281.59,
+    "currency": "SAR",
+    "category": "Office"
+  },
+  "05_2026-01-15_elm_company.pdf": {
+    "vendor": "Elm Company",
+    "vatNumber": "372837929841623",
+    "invoiceNumber": "INV-2026-3217",
+    "date": "2026-01-15",
+    "subtotal": 2419.13,
+    "vatAmount": 362.87,
+    "total": 2782.0,
+    "currency": "SAR",
+    "category": "Software"
+  },
+  "06_2026-02-16_al_tayyar_travel.pdf": {
+    "vendor": "Al Tayyar Travel",
+    "vatNumber": "354751779922983",
+    "invoiceNumber": "INV-2026-4391",
+    "date": "2026-02-16",
+    "subtotal": 7439.59,
+    "vatAmount": 1115.94,
+    "total": 8555.53,
+    "currency": "SAR",
+    "category": "Travel"
+  },
+  "07_2026-03-26_dallah_hospital.pdf": {
+    "vendor": "Dallah Hospital",
+    "vatNumber": "337028382226463",
+    "invoiceNumber": "INV-2026-9732",
+    "date": "2026-03-26",
+    "subtotal": 390.97,
+    "vatAmount": 58.65,
+    "total": 449.62,
+    "currency": "SAR",
+    "category": "Health"
+  },
+  "08_2026-04-22_noon_ksa.pdf": {
+    "vendor": "Noon KSA",
+    "vatNumber": "347258771884133",
+    "invoiceNumber": "INV-2026-4790",
+    "date": "2026-04-22",
+    "subtotal": 223.02,
+    "vatAmount": 33.45,
+    "total": 256.47,
+    "currency": "SAR",
+    "category": "Other"
+  },
+  "09_2026-05-26_al_baik_restaurant.pdf": {
+    "vendor": "Al Baik Restaurant",
+    "vatNumber": "325898319489393",
+    "invoiceNumber": "INV-2026-5828",
+    "date": "2026-05-26",
+    "subtotal": 48.88,
+    "vatAmount": 7.33,
+    "total": 56.21,
+    "currency": "SAR",
+    "category": "Food"
+  },
+  "10_2026-06-17_petromin_express.pdf": {
+    "vendor": "Petromin Express",
+    "vatNumber": "385491452441063",
+    "invoiceNumber": "INV-2026-5211",
+    "date": "2026-06-17",
+    "subtotal": 398.07,
+    "vatAmount": 59.71,
+    "total": 457.78,
+    "currency": "SAR",
+    "category": "Transport"
+  },
+  "11_2026-07-20_mobily.pdf": {
+    "vendor": "Mobily",
+    "vatNumber": "395579906593973",
+    "invoiceNumber": "INV-2026-7981",
+    "date": "2026-07-20",
+    "subtotal": 346.34,
+    "vatAmount": 51.95,
+    "total": 398.29,
+    "currency": "SAR",
+    "category": "Utilities"
+  },
+  "12_2026-08-18_jarir_bookstore.pdf": {
+    "vendor": "Jarir Bookstore",
+    "vatNumber": "346590853801293",
+    "invoiceNumber": "INV-2026-3010",
+    "date": "2026-08-18",
+    "subtotal": 1281.83,
+    "vatAmount": 192.27,
+    "total": 1474.1,
+    "currency": "SAR",
+    "category": "Office"
+  },
+  "13_2026-09-15_al_moammar_information_systems.pdf": {
+    "vendor": "Al Moammar Information Systems",
+    "vatNumber": "363632280886423",
+    "invoiceNumber": "INV-2026-4739",
+    "date": "2026-09-15",
+    "subtotal": 477.17,
+    "vatAmount": 71.58,
+    "total": 548.75,
+    "currency": "SAR",
+    "category": "Software"
+  },
+  "14_2026-10-08_saudia_airlines.pdf": {
+    "vendor": "Saudia Airlines",
+    "vatNumber": "391280845850033",
+    "invoiceNumber": "INV-2026-8709",
+    "date": "2026-10-08",
+    "subtotal": 611.32,
+    "vatAmount": 91.7,
+    "total": 703.02,
+    "currency": "SAR",
+    "category": "Travel"
+  },
+  "15_2026-10-26_nahdi_pharmacy.pdf": {
+    "vendor": "Nahdi Pharmacy",
+    "vatNumber": "353557787943263",
+    "invoiceNumber": "INV-2026-3519",
+    "date": "2026-10-26",
+    "subtotal": 458.7,
+    "vatAmount": 68.8,
+    "total": 527.5,
+    "currency": "SAR",
+    "category": "Health"
+  }
+}

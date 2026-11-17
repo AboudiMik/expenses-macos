@@ -9,6 +9,7 @@ nonisolated struct ExtractedInvoice {
     var needsReview = false
     var reviewNotes = ""
     var wasCorrected = false
+    var inputTokens = 0, outputTokens = 0, seconds = 0.0
 
     /// False when the model filled the tool with dummy values.
     var isPlausible: Bool {
@@ -54,7 +55,8 @@ struct InvoiceExtractor {
         var messages = [ClaudeMessage.user(blocks + [.text("Extract this invoice by calling record_invoice.")])]
         let name = fileURL.lastPathComponent
 
-        var invoice = try await requestInvoice(&messages, pdfText: pdfText, file: name)
+        var usage = (input: 0, output: 0, seconds: 0.0)
+        var invoice = try await requestInvoice(&messages, pdfText: pdfText, file: name, usage: &usage)
         var failures = InvoiceValidator.check(invoice)
         if !failures.isEmpty {
             // Self-correction: show the failed checks and the previous answer, ask for a re-read.
@@ -65,7 +67,7 @@ struct InvoiceExtractor {
                 Re-read the document carefully and call record_invoice again with corrected values. \
                 If the document itself is inconsistent, copy the printed values exactly.
                 """))
-            let second = try await requestInvoice(&messages, pdfText: pdfText, file: name)
+            let second = try await requestInvoice(&messages, pdfText: pdfText, file: name, usage: &usage)
             let secondFailures = InvoiceValidator.check(second)
             invoice = second
             invoice.wasCorrected = secondFailures.isEmpty
@@ -73,15 +75,18 @@ struct InvoiceExtractor {
         }
         invoice.needsReview = !failures.isEmpty
         invoice.reviewNotes = failures.joined(separator: "; ")
+        invoice.inputTokens = usage.input; invoice.outputTokens = usage.output; invoice.seconds = usage.seconds
         return invoice
     }
 
     /// One extraction round trip; retries once if the model answers without the tool. Appends the assistant turn.
-    private func requestInvoice(_ messages: inout [ClaudeMessage], pdfText: String?, file: String) async throws -> ExtractedInvoice {
+    private func requestInvoice(_ messages: inout [ClaudeMessage], pdfText: String?, file: String,
+                                usage: inout (input: Int, output: Int, seconds: Double)) async throws -> ExtractedInvoice {
         for attempt in 0..<2 {
             let response = try await client.send(messages: messages, system: Self.systemPrompt,
                                                  tools: [InvoiceSchema.tool], toolChoice: .auto(disableParallel: true),
                                                  maxTokens: 16000, model: Config.extractionModel)
+            usage.input += response.inputTokens; usage.output += response.outputTokens; usage.seconds += response.seconds
             Self.log(response.content, file: file, attempt: attempt)
             let kept = response.content.filter { if case .other = $0 { return false }; return true }
             messages.append(.init(role: "assistant", content: kept.isEmpty ? [.text("(no tool call)")] : kept))

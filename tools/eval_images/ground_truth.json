@@ -1,0 +1,434 @@
+{
+  "sei-000001-clean-p0.png": {
+    "vendor": [
+      "Qimmat Al Ibdaa Markets",
+      "أسواق قمة الإبداع",
+      "Qimmat Al Ibdaa Foodstuff Est.",
+      "مؤسسة قمة الإبداع للمواد الغذائية"
+    ],
+    "vatNumber": "399999999918023",
+    "invoiceNumber": "20230000001",
+    "date": "2023-01-01",
+    "subtotal": 1553.8,
+    "vatAmount": 233.07,
+    "total": 1786.87,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000001",
+      "layout": "receipt_80mm",
+      "numerals": "arabic_indic",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000039-clean-p0.png": {
+    "vendor": [
+      "Adwa Al Riyada Bookshop",
+      "مكتبة أضواء الريادة",
+      "Adwa Al Riyada Stationery Est.",
+      "مؤسسة أضواء الريادة للقرطاسية"
+    ],
+    "vatNumber": "399999999918133",
+    "invoiceNumber": "SIN2300001",
+    "date": "2023-01-03",
+    "subtotal": 914.0,
+    "vatAmount": 137.1,
+    "total": 1051.1,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000039",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000062-clean-p0.png": {
+    "vendor": [
+      "Adwa Al Anbar Auto Services Co. LLC",
+      "شركة أضواء العنبر لخدمات السيارات ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918193",
+    "invoiceNumber": "20230000002",
+    "date": "2023-01-04",
+    "subtotal": 3549.0,
+    "vatAmount": 532.35,
+    "total": 4081.35,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000062",
+      "layout": "receipt_58mm",
+      "numerals": "mixed",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000063-clean-p0.png": {
+    "vendor": [
+      "Adwa Al Riyada Bookshop",
+      "مكتبة أضواء الريادة",
+      "Adwa Al Riyada Stationery Est.",
+      "مؤسسة أضواء الريادة للقرطاسية"
+    ],
+    "vatNumber": "399999999918133",
+    "invoiceNumber": "SIN2300002",
+    "date": "2023-01-04",
+    "subtotal": 526.15,
+    "vatAmount": 78.92,
+    "total": 605.07,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000063",
+      "layout": "receipt_58mm",
+      "numerals": "arabic_indic",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000084-clean-p0.png": {
+    "vendor": [
+      "Shurfat Al Jawda Bookshop",
+      "مكتبة شرفة الجودة",
+      "Shurfat Al Jawda Office Supplies Co. LLC",
+      "شركة شرفة الجودة للأدوات المكتبية ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918013",
+    "invoiceNumber": "20230000001",
+    "date": "2023-01-05",
+    "subtotal": 1345.5,
+    "vatAmount": 201.83,
+    "total": 1547.33,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000084",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000094-clean-p0.png": {
+    "vendor": [
+      "Ard Al Wadi Electronics Co. LLC",
+      "شركة أرض الوادي للإلكترونيات ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918053",
+    "invoiceNumber": "SIN/2301/0002",
+    "date": "2023-01-06",
+    "subtotal": 47252.5,
+    "vatAmount": 7087.88,
+    "total": 54340.38,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000094",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000131-clean-p0.png": {
+    "vendor": [
+      "Shurfat Al Misk Pharmacy",
+      "صيدلية شرفة المسك",
+      "Shurfat Al Misk Medicines and Medical Supplies Co.",
+      "شركة شرفة المسك للأدوية والمستلزمات الطبية"
+    ],
+    "vatNumber": "399999999918633",
+    "invoiceNumber": "SIN/2301/0001",
+    "date": "2023-01-08",
+    "subtotal": 919.4,
+    "vatAmount": 0.0,
+    "total": 919.4,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000131",
+      "layout": "receipt_80mm",
+      "numerals": "mixed",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000145-clean-p0.png": {
+    "vendor": [
+      "Khatt Al Rabi Electronics Co. LLC",
+      "شركة خط الربيع للإلكترونيات ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918173",
+    "invoiceNumber": "SIN-2023-000001",
+    "date": "2023-01-09",
+    "subtotal": 13413.0,
+    "vatAmount": 2011.95,
+    "total": 15424.95,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000145",
+      "layout": "receipt_80mm",
+      "numerals": "mixed",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000226-clean-p0.png": {
+    "vendor": [
+      "Kunuz Al Hadba Showroom",
+      "معرض كنوز الهضبة",
+      "Kunuz Al Hadba Electrical Appliances Co. Simplified JSC",
+      "شركة كنوز الهضبة للأجهزة الكهربائية مساهمة مبسطة"
+    ],
+    "vatNumber": "399999999919463",
+    "invoiceNumber": "SIN/2301/0001",
+    "date": "2023-01-13",
+    "subtotal": 7392.0,
+    "vatAmount": 1108.8,
+    "total": 8500.8,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000226",
+      "layout": "receipt_58mm",
+      "numerals": "arabic_indic",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000247-clean-p0.png": {
+    "vendor": [
+      "Shurfat Al Jawda Bookshop",
+      "مكتبة شرفة الجودة",
+      "Shurfat Al Jawda Office Supplies Co. LLC",
+      "شركة شرفة الجودة للأدوات المكتبية ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918013",
+    "invoiceNumber": "20230000003",
+    "date": "2023-01-14",
+    "subtotal": 1486.5,
+    "vatAmount": 184.46,
+    "total": 1670.96,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000247",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000288-clean-p0.png": {
+    "vendor": [
+      "Khayrat Al Kawkab Showroom",
+      "معرض خيرات الكوكب",
+      "Khayrat Al Kawkab Electrical Appliances Co. LLC",
+      "شركة خيرات الكوكب للأجهزة الكهربائية ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999919223",
+    "invoiceNumber": "SIN2300001",
+    "date": "2023-01-17",
+    "subtotal": 15026.0,
+    "vatAmount": 2253.9,
+    "total": 17279.9,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000288",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000369-clean-p0.png": {
+    "vendor": [
+      "Nafhat Al Injaz Cafe",
+      "مقهى نفحة الإنجاز",
+      "Nafhat Al Injaz Hospitality Co. One Person Company",
+      "شركة نفحة الإنجاز للضيافة شركة شخص واحد"
+    ],
+    "vatNumber": "399999999918623",
+    "invoiceNumber": "SIN-2023-000001",
+    "date": "2023-01-21",
+    "subtotal": 916.5,
+    "vatAmount": 137.48,
+    "total": 1053.98,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000369",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000385-clean-p0.png": {
+    "vendor": [
+      "Shurfat Al Jawda Bookshop",
+      "مكتبة شرفة الجودة",
+      "Shurfat Al Jawda Office Supplies Co. LLC",
+      "شركة شرفة الجودة للأدوات المكتبية ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918013",
+    "invoiceNumber": "20230000005",
+    "date": "2023-01-22",
+    "subtotal": 4297.2,
+    "vatAmount": 644.58,
+    "total": 4941.78,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000385",
+      "layout": "receipt_80mm",
+      "numerals": "arabic_indic",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000417-clean-p0.png": {
+    "vendor": [
+      "Bustan Al Ghaym Workshop",
+      "ورشة بستان الغيم",
+      "Bustan Al Ghaym Auto Parts Co. One Person Company",
+      "شركة بستان الغيم لقطع غيار السيارات شركة شخص واحد"
+    ],
+    "vatNumber": "399999999918073",
+    "invoiceNumber": "20230000004",
+    "date": "2023-01-24",
+    "subtotal": 9099.0,
+    "vatAmount": 1364.85,
+    "total": 10463.85,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000417",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000465-clean-p0.png": {
+    "vendor": [
+      "Qimmat Al Ibdaa Markets",
+      "أسواق قمة الإبداع",
+      "Qimmat Al Ibdaa Foodstuff Est.",
+      "مؤسسة قمة الإبداع للمواد الغذائية"
+    ],
+    "vatNumber": "399999999918023",
+    "invoiceNumber": "20230000006",
+    "date": "2023-01-27",
+    "subtotal": 2104.15,
+    "vatAmount": 315.62,
+    "total": 2419.77,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000465",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000470-clean-p0.png": {
+    "vendor": [
+      "Afaq Al Asil Hospitality Est.",
+      "مؤسسة آفاق الأصيل للضيافة"
+    ],
+    "vatNumber": "399999999918393",
+    "invoiceNumber": "SIN2300001",
+    "date": "2023-01-27",
+    "subtotal": 388.55,
+    "vatAmount": 58.28,
+    "total": 446.83,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000470",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000507-clean-p0.png": {
+    "vendor": [
+      "Maydan Al Yasmin Showroom",
+      "معرض ميدان الياسمين",
+      "Maydan Al Yasmin Furniture and Decor Co. Closed JSC",
+      "شركة ميدان الياسمين للأثاث والديكور مساهمة مقفلة"
+    ],
+    "vatNumber": "399999999918243",
+    "invoiceNumber": "SIN2300001",
+    "date": "2023-01-29",
+    "subtotal": 21566.0,
+    "vatAmount": 3234.9,
+    "total": 24800.9,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000507",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000510-clean-p0.png": {
+    "vendor": [
+      "Ufuq Al Riyada Grocery",
+      "تموينات أفق الريادة",
+      "Ufuq Al Riyada Foodstuff Est.",
+      "مؤسسة أفق الريادة للمواد الغذائية"
+    ],
+    "vatNumber": "399999999919203",
+    "invoiceNumber": "20230000001",
+    "date": "2023-01-29",
+    "subtotal": 32993.35,
+    "vatAmount": 4949.0,
+    "total": 37942.35,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000510",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000516-clean-p0.png": {
+    "vendor": [
+      "Shurfat Al Jawda Bookshop",
+      "مكتبة شرفة الجودة",
+      "Shurfat Al Jawda Office Supplies Co. LLC",
+      "شركة شرفة الجودة للأدوات المكتبية ذات مسؤولية محدودة"
+    ],
+    "vatNumber": "399999999918013",
+    "invoiceNumber": "20230000006",
+    "date": "2023-01-29",
+    "subtotal": 618.75,
+    "vatAmount": 92.81,
+    "total": 711.56,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000516",
+      "layout": "receipt_80mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  },
+  "sei-000525-clean-p0.png": {
+    "vendor": [
+      "Masharif Al Tamayuz Grocery",
+      "تموينات مشارف التميز",
+      "Masharif Al Tamayuz Supplies Co. Closed JSC",
+      "شركة مشارف التميز للتموينات مساهمة مقفلة"
+    ],
+    "vatNumber": "399999999919913",
+    "invoiceNumber": "SIN-2023-000001",
+    "date": "2023-01-30",
+    "subtotal": 1129.2,
+    "vatAmount": 129.48,
+    "total": 1258.68,
+    "currency": "SAR",
+    "source": {
+      "dataset": "Bayanat-Labs/saudi-einvoice-synth",
+      "record": "sei-000525",
+      "layout": "receipt_58mm",
+      "numerals": "western",
+      "license": "CC BY 4.0"
+    }
+  }
+}
