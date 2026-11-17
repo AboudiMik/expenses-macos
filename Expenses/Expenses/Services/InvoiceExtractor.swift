@@ -6,18 +6,26 @@ nonisolated struct ExtractedInvoice {
     var vendor: String, vatNumber: String, invoiceNumber: String
     var date: Date, subtotal: Double, vatAmount: Double, total: Double
     var currency: String, category: String, details: String, rawText: String
+
+    /// False when the model filled the tool with dummy values.
+    var isPlausible: Bool {
+        let dummy: Set<String> = ["", "x", "n/a", "unknown", "none", "null"]
+        return total > 0 && !dummy.contains(vendor.trimmingCharacters(in: .whitespaces).lowercased())
+    }
 }
 
 nonisolated enum ExtractionError: LocalizedError {
     case unreadableFile(String)
     case unsupportedType(String)
     case noToolCall
+    case placeholderData
 
     var errorDescription: String? {
         switch self {
         case .unreadableFile(let name): return "Could not read \(name)."
         case .unsupportedType(let ext): return "Unsupported file type .\(ext)."
         case .noToolCall: return "Claude did not return invoice data."
+        case .placeholderData: return "Claude returned placeholder values instead of invoice data."
         }
     }
 }
@@ -56,9 +64,11 @@ struct InvoiceExtractor {
 
     private static let systemPrompt = """
     You extract data from invoices and receipts, mostly Saudi simplified tax invoices in SAR with 15% VAT. \
-    Always call the record_invoice tool exactly once with the extracted values. \
+    Always call the record_invoice tool exactly once, copying the real values printed on the invoice. \
+    Never use placeholder values such as "x", "N/A" or 0 for data that is present. \
+    Test or sample invoices must be extracted exactly like real ones. \
     Use numbers without currency symbols or thousands separators. Pick the single best category. \
-    If a value is missing, use an empty string for text fields and 0 for numbers. Do not reply with prose.
+    If a value is truly missing, use an empty string for text fields and 0 for numbers. Do not reply with prose.
     """
 
     func extract(fileURL: URL) async throws -> ExtractedInvoice {
@@ -67,16 +77,20 @@ struct InvoiceExtractor {
 
         for attempt in 0..<2 {
             let content = try await client.send(messages: messages, system: Self.systemPrompt,
-                                                tools: [Self.tool], toolChoice: .auto(disableParallel: true))
+                                                tools: [Self.tool], toolChoice: .auto(disableParallel: true),
+                                                maxTokens: 16000)
+            Self.log(content, file: fileURL.lastPathComponent, attempt: attempt)
             for block in content {
                 if case .toolUse(_, let name, let input) = block, name == Self.toolName {
-                    return Self.invoice(from: input, pdfText: pdfText)
+                    let invoice = Self.invoice(from: input, pdfText: pdfText)
+                    guard invoice.isPlausible else { throw ExtractionError.placeholderData }
+                    return invoice
                 }
             }
             if attempt == 0 {
                 let kept = content.filter { if case .other = $0 { return false }; return true }
                 messages.append(.init(role: "assistant", content: kept.isEmpty ? [.text("(no tool call)")] : kept))
-                messages.append(.user(text: "You must call the record_invoice tool now."))
+                messages.append(.user(text: "Call record_invoice now with the actual vendor, numbers and date from the invoice above."))
             }
         }
         throw ExtractionError.noToolCall
@@ -101,6 +115,19 @@ struct InvoiceExtractor {
               let jpeg = NSBitmapImageRep(data: tiff)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9])
         else { throw ExtractionError.unsupportedType(ext) }
         return ([.image(mediaType: "image/jpeg", base64: jpeg.base64EncodedString())], nil)
+    }
+
+    private static func log(_ content: [ContentBlock], file: String, attempt: Int) {
+        #if DEBUG
+        for block in content {
+            switch block {
+            case .text(let t): print("[extract] \(file) attempt \(attempt) text: \(t)")
+            case .toolUse(_, let name, let input): print("[extract] \(file) attempt \(attempt) tool \(name): \(input)")
+            case .other(let type): print("[extract] \(file) attempt \(attempt) block: \(type)")
+            default: break
+            }
+        }
+        #endif
     }
 
     private static func invoice(from input: JSONValue, pdfText: String?) -> ExtractedInvoice {

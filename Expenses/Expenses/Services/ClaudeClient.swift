@@ -186,6 +186,9 @@ struct ClaudeClient {
         }
 
         let response = try JSONDecoder().decode(Response.self, from: data)
+        #if DEBUG
+        print("[claude] stop_reason=\(response.stopReason ?? "nil") blocks=\(response.content.count)")
+        #endif
         if response.stopReason == "refusal" {
             throw ClaudeError.refused(response.stopDetails?.explanation ?? "no reason given")
         }
