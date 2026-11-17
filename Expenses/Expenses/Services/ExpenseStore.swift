@@ -23,9 +23,11 @@ nonisolated struct AggregateRow: Identifiable {
 @MainActor
 final class ExpenseStore {
     let context: ModelContext
+    let rag: RAGService
 
     init(context: ModelContext) {
         self.context = context
+        self.rag = RAGService(context: context)
     }
 
     @discardableResult
@@ -38,6 +40,7 @@ final class ExpenseStore {
             fileName: fileName, rawText: extracted.rawText)
         context.insert(expense)
         try context.save()
+        try rag.index(expense)
         return expense
     }
 
@@ -78,8 +81,8 @@ final class ExpenseStore {
 
     /// Totals grouped by day, month, year, category or vendor, sorted by key.
     func aggregate(by grouping: Grouping, from: Date? = nil, to: Date? = nil,
-                   category: String? = nil) throws -> [AggregateRow] {
-        let expenses = try list(ExpenseFilter(from: from, to: to, category: category))
+                   category: String? = nil, vendor: String? = nil) throws -> [AggregateRow] {
+        let expenses = try list(ExpenseFilter(from: from, to: to, category: category, vendorContains: vendor))
         let formatter = DateFormatter()
         switch grouping {
         case .day: formatter.dateFormat = "yyyy-MM-dd"
@@ -103,7 +106,7 @@ final class ExpenseStore {
         return rows.values.sorted { $0.key < $1.key }
     }
 
-    func total(from: Date? = nil, to: Date? = nil, category: String? = nil) throws -> Double {
-        try list(ExpenseFilter(from: from, to: to, category: category)).reduce(0) { $0 + $1.total }
+    func total(from: Date? = nil, to: Date? = nil, category: String? = nil, vendor: String? = nil) throws -> Double {
+        try list(ExpenseFilter(from: from, to: to, category: category, vendorContains: vendor)).reduce(0) { $0 + $1.total }
     }
 }

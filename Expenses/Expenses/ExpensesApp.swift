@@ -4,7 +4,7 @@ import SwiftData
 @main
 struct ExpensesApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Expense.self])
+        let schema = Schema([Expense.self, InvoiceChunk.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [configuration])
