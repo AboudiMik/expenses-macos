@@ -112,7 +112,7 @@ struct InvoicesView: View {
         }
         ToolbarItem {
             Picker("Period", selection: $period) {
-                ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(Period.allCases.filter { $0 != .custom }) { Text($0.rawValue).tag($0) }
             }
             .help("Show only invoices dated in this period")
         }

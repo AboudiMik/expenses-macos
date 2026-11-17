@@ -22,7 +22,7 @@ struct ExpensesApp: App {
         }
         .modelContainer(sharedModelContainer)
         .commands {
-            CommandGroup(after: .toolbar) { EvaluationMenuItem() }
+            CommandMenu("Tools") { EvaluationMenuItem() }
         }
 
         Window("Evaluation", id: "evaluation") {

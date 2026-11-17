@@ -19,7 +19,9 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     kpiRow(data)
                     filters($appState)
-                    TimelineChart(rows: data.timeline, granularity: appState.granularity, period: appState.period)
+                    if data.periodIsEmpty, let span = data.dataSpan { emptyPeriodBanner(span) }
+                    TimelineChart(rows: data.timeline, granularity: appState.granularity, period: appState.period,
+                                  range: appState.dateRange)
                     HStack(alignment: .top, spacing: 20) {
                         CategoryChart(rows: data.byCategory, total: data.periodTotal)
                         VendorChart(rows: data.topVendors)
@@ -40,12 +42,29 @@ struct DashboardView: View {
         }
     }
 
+    private func emptyPeriodBanner(_ span: (first: Date, last: Date)) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "calendar.badge.exclamationmark").foregroundStyle(.orange)
+            Text("No invoices in this period. Your data runs from \(span.first, format: .dateTime.day().month(.abbreviated).year()) to \(span.last, format: .dateTime.day().month(.abbreviated).year()).")
+            Spacer()
+            Button("Show all time") { appState.showAllTime() }
+            Button("Show that range") { appState.showCustom(from: span.first, to: span.last) }
+        }
+        .padding(12)
+        .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+    }
+
     private func filters(_ appState: Bindable<AppState>) -> some View {
         HStack(spacing: 16) {
             Picker("Period", selection: appState.period) {
                 ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
             }
-            .pickerStyle(.segmented).labelsHidden().frame(maxWidth: 420)
+            .pickerStyle(.segmented).labelsHidden().frame(maxWidth: 480)
+            if appState.wrappedValue.period == .custom {
+                DatePicker("From", selection: appState.customFrom, displayedComponents: .date).labelsHidden()
+                Text("to").foregroundStyle(.secondary)
+                DatePicker("To", selection: appState.customTo, in: appState.wrappedValue.customFrom..., displayedComponents: .date).labelsHidden()
+            }
             Picker("Granularity", selection: appState.granularity) {
                 ForEach(Granularity.allCases) { Text($0.rawValue).tag($0) }
             }

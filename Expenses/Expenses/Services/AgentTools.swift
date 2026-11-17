@@ -51,9 +51,10 @@ struct AgentTools {
                    description: "Ask to delete an expense by id. The user must confirm with a button; tell them to confirm.",
                    inputSchema: ["type": "object", "properties": ["id": ["type": "string"]], "required": ["id"]], strict: false),
         ClaudeTool(name: "show_chart",
-                   description: "Switch to the Dashboard and set its period, granularity and category filter.",
+                   description: "Switch to the Dashboard and set its period, granularity and category filter. Give start_date and end_date for a specific range (period becomes Custom).",
                    inputSchema: ["type": "object", "properties": [
-                       "period": ["type": "string", "enum": ["This month", "Last 3 months", "Past year", "All time"]],
+                       "period": ["type": "string", "enum": ["This month", "Last 3 months", "Past year", "All time", "Custom"]],
+                       "start_date": date, "end_date": date,
                        "granularity": ["type": "string", "enum": ["Day", "Month", "Year"]],
                        "category": ["type": "string", "description": "A category name, or 'all'"],
                    ]], strict: false),
@@ -149,6 +150,9 @@ struct AgentTools {
 
     private func showChart(_ input: JSONValue) -> String {
         if let p = input["period"]?.stringValue, let period = Period(rawValue: p) { appState.period = period }
+        if let from = Self.parse(input["start_date"]?.stringValue), let to = Self.parse(input["end_date"]?.stringValue) {
+            appState.showCustom(from: from, to: to)
+        }
         if let g = input["granularity"]?.stringValue, let granularity = Granularity(rawValue: g) { appState.granularity = granularity }
         if let c = input["category"]?.stringValue {
             appState.category = c.lowercased() == "all" ? nil : ExpenseCategory.normalized(c)

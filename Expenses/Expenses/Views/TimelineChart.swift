@@ -6,6 +6,7 @@ struct TimelineChart: View {
     var rows: [AggregateRow]
     var granularity: Granularity
     var period: Period
+    var range: (from: Date?, to: Date?)
     @State private var selectedDate: Date?
 
     private struct Point: Identifiable {
@@ -33,8 +34,7 @@ struct TimelineChart: View {
     }
 
     private var domain: ClosedRange<Date>? {
-        let range = period.range()
-        guard let from = range.from, let to = range.to else { return nil }
+        guard let from = range.from, let to = range.to, from < to else { return nil }
         return from...to
     }
 

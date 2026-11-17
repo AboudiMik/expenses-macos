@@ -9,15 +9,22 @@ struct EvaluationView: View {
     @State private var agent = AgentEvaluator()
     @State private var choosingFolder = false
     @State private var exporting = false
+    @State private var tab = 0
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                extractionSection
-                Divider()
-                agentSection
+        VStack(spacing: 0) {
+            Picker("Test", selection: $tab) {
+                Text("Extraction test").tag(0)
+                Text("Agent test").tag(1)
             }
-            .padding(20)
+            .pickerStyle(.segmented).labelsHidden().frame(width: 320).padding(.vertical, 10)
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    if tab == 0 { extractionSection } else { agentSection }
+                }
+                .padding(20)
+            }
         }
         .frame(minWidth: 760, minHeight: 600)
         .navigationTitle("Evaluation")

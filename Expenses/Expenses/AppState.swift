@@ -13,6 +13,7 @@ nonisolated enum Period: String, CaseIterable, Identifiable {
     case lastThreeMonths = "Last 3 months"
     case pastYear = "Past year"
     case allTime = "All time"
+    case custom = "Custom"
     var id: String { rawValue }
 
     /// Start and end dates for the period; nil means unbounded.
@@ -22,7 +23,7 @@ nonisolated enum Period: String, CaseIterable, Identifiable {
         case .thisMonth: return (startOfMonth, now)
         case .lastThreeMonths: return (calendar.date(byAdding: .month, value: -2, to: startOfMonth), now)
         case .pastYear: return (calendar.date(byAdding: .month, value: -11, to: startOfMonth), now)
-        case .allTime: return (nil, nil)
+        case .allTime, .custom: return (nil, nil)
         }
     }
 }
@@ -47,4 +48,20 @@ final class AppState {
     var period: Period = .pastYear
     var granularity: Granularity = .month
     var category: String? = nil
+    var customFrom: Date = Calendar.current.date(byAdding: .year, value: -1, to: .now)!
+    var customTo: Date = .now
+
+    /// The date range the dashboard shows; custom ranges cover whole days.
+    var dateRange: (from: Date?, to: Date?) {
+        guard period == .custom else { return period.range() }
+        let start = Calendar.current.startOfDay(for: customFrom)
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: customTo))!.addingTimeInterval(-1)
+        return (start, end)
+    }
+
+    func showAllTime() { period = .allTime }
+
+    func showCustom(from: Date, to: Date) {
+        customFrom = from; customTo = to; period = .custom
+    }
 }

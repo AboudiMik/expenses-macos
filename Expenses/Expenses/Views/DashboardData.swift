@@ -11,15 +11,19 @@ nonisolated struct DashboardData {
     var topVendors: [AggregateRow] = []
     var periodTotal: Double = 0
     var hasAnyData = false
+    var dataSpan: (first: Date, last: Date)? = nil
+    var periodIsEmpty: Bool { hasAnyData && timeline.isEmpty }
 
     @MainActor
     static func load(store: ExpenseStore, state: AppState, now: Date = .now) -> DashboardData {
         var data = DashboardData()
         let calendar = Calendar.current
         let category = state.category
-        let range = state.period.range(now: now)
+        let range = state.dateRange
         do {
-            data.hasAnyData = !(try store.list()).isEmpty
+            let all = try store.list()
+            data.hasAnyData = !all.isEmpty
+            if let newest = all.first, let oldest = all.last { data.dataSpan = (oldest.date, newest.date) }
             let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
             let lastMonthStart = calendar.date(byAdding: .month, value: -1, to: monthStart)!
             let yearStart = calendar.date(from: calendar.dateComponents([.year], from: now))!
