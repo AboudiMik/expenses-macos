@@ -52,8 +52,8 @@
         "ENABLE_USER_SELECTED_FILES": "readwrite",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_NSHumanReadableCopyright": "",
-        "INFOPLIST_KEY_NSMicrophoneUsageDescription": "",
-        "INFOPLIST_KEY_NSSpeechRecognitionUsageDescription": "",
+        "INFOPLIST_KEY_NSMicrophoneUsageDescription": "Expenses uses the microphone so you can dictate questions and commands to the chat.",
+        "INFOPLIST_KEY_NSSpeechRecognitionUsageDescription": "Expenses uses speech recognition to turn your dictation into text for the chat.",
         "LD_RUNPATH_SEARCH_PATHS": [
           "$(inherited)",
           "@executable_path/../Frameworks",
