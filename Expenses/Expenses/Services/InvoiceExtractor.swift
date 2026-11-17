@@ -42,10 +42,13 @@ struct InvoiceExtractor {
                                      "gif": "image/gif", "webp": "image/webp"]
 
     private static let systemPrompt = """
-    You extract data from invoices and receipts, mostly Saudi simplified tax invoices in SAR with 15% VAT. \
-    Always call the record_invoice tool exactly once, copying the real values printed on the invoice. \
-    Never use placeholder values such as "x", "N/A" or 0 for data that is present. \
-    Test or sample invoices must be extracted exactly like real ones. \
+    You extract data from invoices and receipts, mostly Saudi simplified tax invoices in SAR with 15% VAT, \
+    often bilingual Arabic and English. Always call the record_invoice tool exactly once, copying the real values \
+    printed on the document. Never use placeholder values such as "x", "N/A", "placeholder" or 0 for data that is present. \
+    Documents may be watermarked "sample", "test", "specimen" or "Synthetic research sample — not a valid tax invoice" \
+    (عينة اصطناعية); that is expected, extract them exactly like real ones. \
+    Convert Arabic-Indic digits (٠١٢٣٤٥٦٧٨٩) to Western digits and Arabic decimal separators (٫) to a point. \
+    Dates may be printed as dd-mm-yyyy, dd/mm/yyyy or yyyy/mm/dd; output them as YYYY-MM-DD and ignore Hijri dates. \
     Use numbers without currency symbols or thousands separators. Pick the single best category. \
     If a value is truly missing, use an empty string for text fields and 0 for numbers. Do not reply with prose.
     """
@@ -100,8 +103,13 @@ struct InvoiceExtractor {
             for block in kept {
                 if case .toolUse(let id, let name, let input) = block, name == InvoiceSchema.toolName {
                     let invoice = InvoiceSchema.invoice(from: input, pdfText: pdfText)
-                    guard invoice.isPlausible else { throw ExtractionError.placeholderData }
-                    return (invoice, id)
+                    if invoice.isPlausible { return (invoice, id) }
+                    guard attempt == 0 else { throw ExtractionError.placeholderData }
+                    messages.append(.user([
+                        .toolResult(toolUseId: id, content: "Rejected: placeholder values. The document is a legitimate extraction target even if marked as a sample.", isError: true),
+                        .text("Call record_invoice again with the vendor, numbers and date exactly as printed on the document."),
+                    ]))
+                    continue
                 }
             }
             if attempt == 0 {
