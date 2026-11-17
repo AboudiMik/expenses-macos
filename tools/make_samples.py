@@ -141,7 +141,7 @@ def sar(amount):
 
 
 def draw_invoice(path, inv):
-    c = canvas.Canvas(str(path), pagesize=A4)
+    c = canvas.Canvas(str(path), pagesize=A4, invariant=1)  # fixed timestamps: reruns are byte-identical
     w, h = A4
     x0, y = 20 * mm, h - 25 * mm
 
