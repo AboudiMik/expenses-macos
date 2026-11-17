@@ -24,6 +24,7 @@ def main():
     p.add_argument("--subtitle", default="")
     p.add_argument("--author", default="")
     p.add_argument("--date", default="")
+    p.add_argument("--html", type=pathlib.Path, help="also write the intermediate HTML here")
     a = p.parse_args()
 
     lines = a.source.read_text().splitlines()
@@ -39,6 +40,8 @@ def main():
 {lead_html}
 {html_body}
 </body></html>"""
+    if a.html:
+        a.html.write_text(page)
     with tempfile.TemporaryDirectory() as tmp:
         html_path = pathlib.Path(tmp) / "doc.html"
         html_path.write_text(page)

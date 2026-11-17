@@ -1,6 +1,23 @@
 # Expenses — project report
 
-Native macOS expense tracker with AI extraction and an AI chat assistant. Built on 17 November 2026 in one day, from an empty folder, with Claude Code driving the implementation under a written specification (`CLAUDE.md`).
+Prepared for Magna AI by Abdulghani Mikati. Native macOS expense tracker with AI extraction and an AI chat assistant, built on 17 November 2026 from an empty folder, with Claude Code driving the implementation under a written specification (`CLAUDE.md`).
+
+## Brief vs delivered
+
+| Brief | Delivered | Notes |
+|---|---|---|
+| Import invoices (PDF and image), extract structured expenses | Yes | PDFKit text or vision; strict tool schema; 3 files in parallel |
+| Store expenses with vendor, VAT number, invoice number, date, amounts, category | Yes | SwiftData; plus review flags and correction marker |
+| Dashboard with KPIs and charts, period and granularity filters | Yes | Added custom date range, hover details, empty-period banner |
+| Chat that answers questions and controls the app | Yes | 8 tools, numbers only from ExpenseStore, confirmed delete |
+| Semantic search over invoice contents | Yes | On-device embeddings, hybrid scoring, keyword fallback |
+| Dictation, English and Arabic, input only | Yes | On-device where supported; auto-send on stop |
+| Validation, duplicate detection, review workflow | Yes | Arithmetic, VAT rate, date checks; one self-correction round |
+| Token usage and cost visibility | Yes | Per answer and per session |
+| Accuracy measurement | Yes | Evaluation window; 20 labelled Saudi receipts; Markdown export |
+| Release build and documentation | Yes | Release zip, README, this report, PDFs |
+| Open-source model on device | No | 8 GB of RAM is not enough; see Limitations |
+| Re-run of extraction after the watermark fix; agent test run | Pending | Listed under Next steps |
 
 ## 1. What was built
 
@@ -97,7 +114,7 @@ The three failures all had the dataset's footer "Synthetic research sample — n
 - **Needs internet.** Extraction and chat stop without a connection; browsing saved data still works.
 - **Arabic search is keyword-only.** Apple's on-device sentence embeddings are English-only, so Arabic invoice text is matched by words, not meaning.
 - **Single user, single Mac.** One sandboxed database, no accounts, no sync, no backup beyond Time Machine.
-- **Unsigned build.** The release is signed ad hoc and not notarised; it needs right-click → Open.
+- **Unsigned build.** The release is signed ad hoc and not notarised; the first launch goes through System Settings → Privacy & Security → Open Anyway.
 - **Evaluation is synthetic.** Accuracy was measured on generated PDFs and synthetic Saudi receipts, not on photographed receipts from real shops.
 - **One currency.** Other currencies are stored but totals assume SAR.
 - **Cost depends on usage.** Every import and question is an API call billed to the key owner; a busy month of a few hundred invoices and questions costs on the order of a few dollars.

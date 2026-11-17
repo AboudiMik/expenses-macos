@@ -1,0 +1,14 @@
+Expenses - native macOS expense tracker with AI extraction and chat
+Abdulghani Mikati, prepared for Magna AI, 17 November 2026
+
+Requires macOS 15 or later.
+
+1. Double-click Expenses.app. macOS will say it cannot verify the developer; click Done.
+   Open System Settings > Privacy & Security, scroll down, click "Open Anyway" next to Expenses, then Open.
+2. Press Cmd+, (Settings), paste the API key you received separately, click Save key.
+3. Click Import and pick the PDFs in samples/ (the PNGs are Saudi receipt images to try too).
+4. Ask the chat: "How much did I spend last month?"  "Show my spending by category for all time"
+5. Tools menu > Evaluation... runs the accuracy tests.
+
+README.pdf has the full guide. REPORT.pdf describes what was built, how, and the test results.
+Source code: see the GitHub link in the email.
