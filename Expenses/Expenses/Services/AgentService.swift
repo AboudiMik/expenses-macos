@@ -8,6 +8,9 @@ nonisolated struct ChatMessage: Identifiable {
     var text: String
     var toolsUsed: [String] = []
     var pendingDeleteId: UUID? = nil
+    var inputTokens = 0
+    var outputTokens = 0
+    var seconds = 0.0
 }
 
 /// Runs the chat: a Claude tool-use loop over AgentTools, keeping history for the session.
@@ -53,11 +56,14 @@ final class AgentService {
 
         var toolsUsed: [String] = []
         var answer = ""
+        var inputTokens = 0, outputTokens = 0, seconds = 0.0
         do {
             for _ in 0..<Self.maxSteps {
-                let content = try await client.send(messages: history, system: systemPrompt,
-                                                    tools: AgentTools.definitions, toolChoice: .auto(), maxTokens: 8000)
-                let kept = content.filter { if case .other = $0 { return false }; return true }
+                let response = try await client.send(messages: history, system: systemPrompt,
+                                                     tools: AgentTools.definitions, toolChoice: .auto(),
+                                                     maxTokens: 8000, model: Config.agentModel)
+                inputTokens += response.inputTokens; outputTokens += response.outputTokens; seconds += response.seconds
+                let kept = response.content.filter { if case .other = $0 { return false }; return true }
                 history.append(ClaudeMessage(role: "assistant", content: kept.isEmpty ? [.text("…")] : kept))
 
                 var results: [ContentBlock] = []
@@ -79,7 +85,8 @@ final class AgentService {
             answer = answer.isEmpty ? error.localizedDescription : answer + "\n\n" + error.localizedDescription
             history.removeSubrange(historyStart...)   // keep history valid for the next turn
         }
-        var reply = ChatMessage(role: .assistant, text: answer.isEmpty ? "Done." : answer, toolsUsed: toolsUsed)
+        var reply = ChatMessage(role: .assistant, text: answer.isEmpty ? "Done." : answer, toolsUsed: toolsUsed,
+                                inputTokens: inputTokens, outputTokens: outputTokens, seconds: seconds)
         if pendingDelete != nil { reply.pendingDeleteId = reply.id }
         messages.append(reply)
     }

@@ -8,64 +8,6 @@ nonisolated struct ClaudeMessage: Codable {
     static func user(text: String) -> ClaudeMessage { .user([.text(text)]) }
 }
 
-nonisolated enum ContentBlock: Codable {
-    case text(String)
-    case image(mediaType: String, base64: String)
-    case document(mediaType: String, base64: String)
-    case toolUse(id: String, name: String, input: JSONValue)
-    case toolResult(toolUseId: String, content: String, isError: Bool)
-    case other(type: String)
-
-    private enum Keys: String, CodingKey {
-        case type, text, source, id, name, input, content
-        case toolUseId = "tool_use_id", isError = "is_error"
-    }
-    private enum SourceKeys: String, CodingKey { case type, mediaType = "media_type", data }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: Keys.self)
-        let type = try c.decode(String.self, forKey: .type)
-        switch type {
-        case "text":
-            self = .text(try c.decode(String.self, forKey: .text))
-        case "tool_use":
-            self = .toolUse(id: try c.decode(String.self, forKey: .id),
-                            name: try c.decode(String.self, forKey: .name),
-                            input: try c.decode(JSONValue.self, forKey: .input))
-        default:
-            self = .other(type: type)
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: Keys.self)
-        switch self {
-        case .text(let text):
-            try c.encode("text", forKey: .type)
-            try c.encode(text, forKey: .text)
-        case .image(let mediaType, let base64), .document(let mediaType, let base64):
-            if case .image = self { try c.encode("image", forKey: .type) }
-            else { try c.encode("document", forKey: .type) }
-            var s = c.nestedContainer(keyedBy: SourceKeys.self, forKey: .source)
-            try s.encode("base64", forKey: .type)
-            try s.encode(mediaType, forKey: .mediaType)
-            try s.encode(base64, forKey: .data)
-        case .toolUse(let id, let name, let input):
-            try c.encode("tool_use", forKey: .type)
-            try c.encode(id, forKey: .id)
-            try c.encode(name, forKey: .name)
-            try c.encode(input, forKey: .input)
-        case .toolResult(let toolUseId, let content, let isError):
-            try c.encode("tool_result", forKey: .type)
-            try c.encode(toolUseId, forKey: .toolUseId)
-            try c.encode(content, forKey: .content)
-            if isError { try c.encode(true, forKey: .isError) }
-        case .other(let type):
-            try c.encode(type, forKey: .type)
-        }
-    }
-}
-
 nonisolated struct ClaudeTool: Encodable {
     var name: String
     var description: String
@@ -129,6 +71,13 @@ nonisolated enum ClaudeError: LocalizedError {
     }
 }
 
+nonisolated struct ClaudeResponse {
+    var content: [ContentBlock]
+    var inputTokens: Int
+    var outputTokens: Int
+    var seconds: Double
+}
+
 struct ClaudeClient {
     var session: URLSession = .shared
 
@@ -142,11 +91,16 @@ struct ClaudeClient {
     }
     private struct Response: Decodable {
         struct StopDetails: Decodable { var explanation: String? }
+        struct Usage: Decodable {
+            var inputTokens: Int?, outputTokens: Int?
+            enum CodingKeys: String, CodingKey { case inputTokens = "input_tokens", outputTokens = "output_tokens" }
+        }
         var content: [ContentBlock]
         var stopReason: String?
         var stopDetails: StopDetails?
+        var usage: Usage?
         enum CodingKeys: String, CodingKey {
-            case content, stopReason = "stop_reason", stopDetails = "stop_details"
+            case content, usage, stopReason = "stop_reason", stopDetails = "stop_details"
         }
     }
     private struct ErrorBody: Decodable {
@@ -154,9 +108,11 @@ struct ClaudeClient {
         var error: Inner
     }
 
-    /// Sends one Messages API request and returns the decoded content blocks.
+    /// Sends one Messages API request and returns the decoded content blocks with usage and timing.
     func send(messages: [ClaudeMessage], system: String? = nil, tools: [ClaudeTool]? = nil,
-              toolChoice: ToolChoice? = nil, maxTokens: Int = Config.maxTokens) async throws -> [ContentBlock] {
+              toolChoice: ToolChoice? = nil, maxTokens: Int = Config.maxTokens,
+              model: String = Config.agentModel) async throws -> ClaudeResponse {
+        let started = Date()
         guard let apiKey = KeychainStore.loadAPIKey(), !apiKey.isEmpty else { throw ClaudeError.missingAPIKey }
 
         var request = URLRequest(url: Config.apiURL)
@@ -166,7 +122,7 @@ struct ClaudeClient {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.timeoutInterval = 180
         request.httpBody = try JSONEncoder().encode(Request(
-            model: Config.model, maxTokens: maxTokens, system: system,
+            model: model, maxTokens: maxTokens, system: system,
             messages: messages, tools: tools, toolChoice: toolChoice))
 
         let (data, urlResponse) = try await session.data(for: request)
@@ -192,6 +148,9 @@ struct ClaudeClient {
         if response.stopReason == "refusal" {
             throw ClaudeError.refused(response.stopDetails?.explanation ?? "no reason given")
         }
-        return response.content
+        let input = response.usage?.inputTokens ?? 0, output = response.usage?.outputTokens ?? 0
+        UsageTracker.shared.record(input: input, output: output)
+        return ClaudeResponse(content: response.content, inputTokens: input, outputTokens: output,
+                              seconds: Date().timeIntervalSince(started))
     }
 }

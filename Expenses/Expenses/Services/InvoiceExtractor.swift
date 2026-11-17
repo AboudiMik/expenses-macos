@@ -6,6 +6,9 @@ nonisolated struct ExtractedInvoice {
     var vendor: String, vatNumber: String, invoiceNumber: String
     var date: Date, subtotal: Double, vatAmount: Double, total: Double
     var currency: String, category: String, details: String, rawText: String
+    var needsReview = false
+    var reviewNotes = ""
+    var wasCorrected = false
 
     /// False when the model filled the tool with dummy values.
     var isPlausible: Bool {
@@ -34,33 +37,8 @@ nonisolated enum ExtractionError: LocalizedError {
 struct InvoiceExtractor {
     var client = ClaudeClient()
 
-    static let toolName = "record_invoice"
     private static let imageTypes = ["png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
                                      "gif": "image/gif", "webp": "image/webp"]
-    private static let categories = ExpenseCategory.allCases.map { JSONValue.string($0.rawValue) }
-
-    static let tool = ClaudeTool(
-        name: toolName,
-        description: "Record the structured data of one invoice or receipt.",
-        inputSchema: [
-            "type": "object", "additionalProperties": false,
-            "properties": [
-                "vendor": ["type": "string", "description": "Seller name as printed"],
-                "vatNumber": ["type": "string", "description": "15-digit VAT registration number, or empty string"],
-                "invoiceNumber": ["type": "string", "description": "Invoice or receipt number, or empty string"],
-                "date": ["type": "string", "description": "Invoice date as YYYY-MM-DD"],
-                "subtotal": ["type": "number", "description": "Amount before VAT"],
-                "vatAmount": ["type": "number", "description": "VAT amount"],
-                "total": ["type": "number", "description": "Amount including VAT"],
-                "currency": ["type": "string", "description": "ISO currency code, e.g. SAR"],
-                "category": ["type": "string", "enum": .array(categories)],
-                "details": ["type": "string", "description": "Line items as 'description x qty = amount', separated by '; '"],
-                "fullText": ["type": ["string", "null"],
-                             "description": "Complete visible text of the invoice when it was given as an image or document; null when given as text"],
-            ],
-            "required": ["vendor", "vatNumber", "invoiceNumber", "date", "subtotal", "vatAmount",
-                         "total", "currency", "category", "details", "fullText"],
-        ])
 
     private static let systemPrompt = """
     You extract data from invoices and receipts, mostly Saudi simplified tax invoices in SAR with 15% VAT. \
@@ -74,26 +52,56 @@ struct InvoiceExtractor {
     func extract(fileURL: URL) async throws -> ExtractedInvoice {
         let (blocks, pdfText) = try Self.contentBlocks(for: fileURL)
         var messages = [ClaudeMessage.user(blocks + [.text("Extract this invoice by calling record_invoice.")])]
+        let name = fileURL.lastPathComponent
 
+        var invoice = try await requestInvoice(&messages, pdfText: pdfText, file: name)
+        var failures = InvoiceValidator.check(invoice)
+        if !failures.isEmpty {
+            // Self-correction: show the failed checks and the previous answer, ask for a re-read.
+            let previous = "vendor \(invoice.vendor), date \(Self.day(invoice.date)), subtotal \(invoice.subtotal), VAT \(invoice.vatAmount), total \(invoice.total)"
+            messages.append(.user(text: """
+                Your previous answer (\(previous)) failed these checks:
+                - \(failures.joined(separator: "\n- "))
+                Re-read the document carefully and call record_invoice again with corrected values. \
+                If the document itself is inconsistent, copy the printed values exactly.
+                """))
+            let second = try await requestInvoice(&messages, pdfText: pdfText, file: name)
+            let secondFailures = InvoiceValidator.check(second)
+            invoice = second
+            invoice.wasCorrected = secondFailures.isEmpty
+            failures = secondFailures
+        }
+        invoice.needsReview = !failures.isEmpty
+        invoice.reviewNotes = failures.joined(separator: "; ")
+        return invoice
+    }
+
+    /// One extraction round trip; retries once if the model answers without the tool. Appends the assistant turn.
+    private func requestInvoice(_ messages: inout [ClaudeMessage], pdfText: String?, file: String) async throws -> ExtractedInvoice {
         for attempt in 0..<2 {
-            let content = try await client.send(messages: messages, system: Self.systemPrompt,
-                                                tools: [Self.tool], toolChoice: .auto(disableParallel: true),
-                                                maxTokens: 16000)
-            Self.log(content, file: fileURL.lastPathComponent, attempt: attempt)
-            for block in content {
-                if case .toolUse(_, let name, let input) = block, name == Self.toolName {
-                    let invoice = Self.invoice(from: input, pdfText: pdfText)
+            let response = try await client.send(messages: messages, system: Self.systemPrompt,
+                                                 tools: [InvoiceSchema.tool], toolChoice: .auto(disableParallel: true),
+                                                 maxTokens: 16000, model: Config.extractionModel)
+            Self.log(response.content, file: file, attempt: attempt)
+            let kept = response.content.filter { if case .other = $0 { return false }; return true }
+            messages.append(.init(role: "assistant", content: kept.isEmpty ? [.text("(no tool call)")] : kept))
+            for block in kept {
+                if case .toolUse(_, let name, let input) = block, name == InvoiceSchema.toolName {
+                    let invoice = InvoiceSchema.invoice(from: input, pdfText: pdfText)
                     guard invoice.isPlausible else { throw ExtractionError.placeholderData }
                     return invoice
                 }
             }
             if attempt == 0 {
-                let kept = content.filter { if case .other = $0 { return false }; return true }
-                messages.append(.init(role: "assistant", content: kept.isEmpty ? [.text("(no tool call)")] : kept))
                 messages.append(.user(text: "Call record_invoice now with the actual vendor, numbers and date from the invoice above."))
             }
         }
         throw ExtractionError.noToolCall
+    }
+
+    private static func day(_ date: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
     }
 
     /// Returns the content blocks to send and, for text PDFs, the extracted text.
@@ -128,24 +136,5 @@ struct InvoiceExtractor {
             }
         }
         #endif
-    }
-
-    private static func invoice(from input: JSONValue, pdfText: String?) -> ExtractedInvoice {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = .current
-        let currency = input["currency"]?.stringValue?.uppercased() ?? ""
-        return ExtractedInvoice(
-            vendor: input["vendor"]?.stringValue ?? "",
-            vatNumber: input["vatNumber"]?.stringValue ?? "",
-            invoiceNumber: input["invoiceNumber"]?.stringValue ?? "",
-            date: input["date"]?.stringValue.flatMap { formatter.date(from: $0) } ?? .now,
-            subtotal: input["subtotal"]?.doubleValue ?? 0,
-            vatAmount: input["vatAmount"]?.doubleValue ?? 0,
-            total: input["total"]?.doubleValue ?? 0,
-            currency: currency.isEmpty ? Config.defaultCurrency : currency,
-            category: ExpenseCategory.normalized(input["category"]?.stringValue),
-            details: input["details"]?.stringValue ?? "",
-            rawText: pdfText ?? input["fullText"]?.stringValue ?? "")
     }
 }

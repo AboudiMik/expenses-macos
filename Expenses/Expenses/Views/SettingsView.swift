@@ -4,6 +4,7 @@ struct SettingsView: View {
     @State private var apiKey = ""
     @State private var hasStoredKey = KeychainStore.loadAPIKey()?.isEmpty == false
     @State private var status: String?
+    private var usage: UsageTracker { UsageTracker.shared }
 
     var body: some View {
         Form {
@@ -18,7 +19,13 @@ struct SettingsView: View {
                           systemImage: hasStoredKey ? "checkmark.circle.fill" : "exclamationmark.circle")
                         .foregroundStyle(hasStoredKey ? .green : .secondary)
                 }
-                LabeledContent("Model", value: Config.model)
+                LabeledContent("Extraction model", value: Config.extractionModel)
+                LabeledContent("Chat model", value: Config.agentModel)
+            }
+            Section("Usage this session") {
+                LabeledContent("Requests", value: usage.requests, format: .number)
+                LabeledContent("Input tokens", value: usage.inputTokens, format: .number)
+                LabeledContent("Output tokens", value: usage.outputTokens, format: .number)
             }
             if let status {
                 Text(status).font(.caption).foregroundStyle(.secondary)

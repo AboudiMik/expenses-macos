@@ -38,16 +38,32 @@ final class ExpenseStore {
             subtotal: extracted.subtotal, vatAmount: extracted.vatAmount, total: extracted.total,
             currency: extracted.currency, category: extracted.category, details: extracted.details,
             fileName: fileName, rawText: extracted.rawText)
+        expense.needsReview = extracted.needsReview
+        expense.reviewNotes = extracted.reviewNotes
+        expense.wasCorrected = extracted.wasCorrected
         context.insert(expense)
         try context.save()
         try rag.index(expense)
         return expense
     }
 
-    /// Call after editing an Expense's properties in place.
+    /// Call after editing an Expense's properties in place. Re-runs validation, which clears or sets the review flag.
     func update(_ expense: Expense) throws {
         expense.category = ExpenseCategory.normalized(expense.category)
+        let failures = InvoiceValidator.check(expense)
+        expense.needsReview = !failures.isEmpty
+        expense.reviewNotes = failures.joined(separator: "; ")
         try context.save()
+    }
+
+    /// An existing expense with the same vendor and a matching non-empty invoice number.
+    func findDuplicate(vendor: String, invoiceNumber: String) throws -> Expense? {
+        let number = invoiceNumber.trimmingCharacters(in: .whitespaces)
+        guard !number.isEmpty else { return nil }
+        return try list().first {
+            $0.invoiceNumber.caseInsensitiveCompare(number) == .orderedSame &&
+            $0.vendor.caseInsensitiveCompare(vendor) == .orderedSame
+        }
     }
 
     func delete(_ expense: Expense) throws {

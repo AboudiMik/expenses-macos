@@ -32,6 +32,9 @@ final class Expense {
     var fileName: String
     var rawText: String
     var createdAt: Date
+    var needsReview: Bool = false
+    var reviewNotes: String = ""
+    var wasCorrected: Bool = false
     @Relationship(deleteRule: .cascade, inverse: \InvoiceChunk.expense) var chunks: [InvoiceChunk] = []
 
     init(vendor: String, vatNumber: String, invoiceNumber: String, date: Date,

@@ -110,13 +110,20 @@ struct ChatView: View {
                     }
                     .controlSize(.small)
                 }
-                if !message.toolsUsed.isEmpty {
-                    Text("Tools: " + message.toolsUsed.joined(separator: ", "))
-                        .font(.caption2).foregroundStyle(.tertiary)
-                }
+                Text(usageLine(message)).font(.caption2).foregroundStyle(.tertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func usageLine(_ message: ChatMessage) -> String {
+        var parts: [String] = []
+        if !message.toolsUsed.isEmpty { parts.append("Tools: " + message.toolsUsed.joined(separator: ", ")) }
+        if message.inputTokens + message.outputTokens > 0 {
+            parts.append("\(message.inputTokens.formatted()) in / \(message.outputTokens.formatted()) out")
+            parts.append(String(format: "%.1f s", message.seconds))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private func submit() {

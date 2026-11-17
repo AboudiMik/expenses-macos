@@ -10,6 +10,14 @@ struct ExpenseEditView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
+                if expense.needsReview {
+                    Section {
+                        Label(expense.reviewNotes, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    } header: { Text("Needs review") } footer: { Text("Saving re-checks the values and clears this flag when they are consistent.") }
+                } else if expense.wasCorrected {
+                    Section { Label("Claude corrected its first reading of this invoice.", systemImage: "checkmark.circle").foregroundStyle(.secondary) }
+                }
                 Section("Invoice") {
                     TextField("Vendor", text: $expense.vendor)
                     TextField("VAT number", text: $expense.vatNumber)
