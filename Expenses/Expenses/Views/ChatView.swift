@@ -2,12 +2,24 @@ import SwiftUI
 
 struct ChatView: View {
     @Bindable var agent: AgentService
+    @State private var speech = SpeechService()
+    @AppStorage("speechLanguage") private var speechLanguage = SpeechLanguage.english.rawValue
     @State private var draft = ""
     @FocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Chat").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 10)
+            HStack {
+                Text("Chat").font(.headline)
+                Spacer()
+                Picker("Dictation language", selection: $speechLanguage) {
+                    ForEach(SpeechLanguage.allCases) { Text($0.label).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 90)
+                .disabled(speech.isRecording)
+                .help("Dictation language")
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
             Divider()
             ScrollViewReader { proxy in
                 ScrollView {
@@ -27,16 +39,50 @@ struct ChatView: View {
                 .onChange(of: agent.isWorking) { scroll(proxy) }
             }
             Divider()
+            if let error = speech.errorMessage {
+                Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal, 12).padding(.top, 6)
+            }
             HStack(spacing: 8) {
-                TextField("Ask about your expenses…", text: $draft, axis: .vertical)
+                micButton
+                TextField(speech.isRecording ? "Listening…" : "Ask about your expenses…", text: $draft, axis: .vertical)
                     .lineLimit(1...4).textFieldStyle(.plain).focused($focused)
                     .onSubmit { submit() }
+                    .disabled(speech.isRecording)
                 Button { submit() } label: { Image(systemName: "arrow.up.circle.fill").font(.title2) }
-                    .buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || agent.isWorking)
+                    .buttonStyle(.plain)
+                    .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || agent.isWorking || speech.isRecording)
             }
             .padding(10)
+            .background(speech.isRecording ? Color.red.opacity(0.08) : Color.clear)
         }
         .background(.background)
+        .onChange(of: speech.transcript) { if speech.isRecording { draft = speech.transcript } }
+    }
+
+    private var micButton: some View {
+        Button {
+            Task { await toggleRecording() }
+        } label: {
+            Image(systemName: speech.isRecording ? "stop.circle.fill" : "mic.circle.fill")
+                .font(.title2)
+                .foregroundStyle(speech.isRecording ? .red : .secondary)
+                .symbolEffect(.pulse, isActive: speech.isRecording)
+        }
+        .buttonStyle(.plain)
+        .disabled(agent.isWorking)
+        .help(speech.isRecording ? "Stop and send" : "Dictate")
+    }
+
+    private func toggleRecording() async {
+        if speech.isRecording {
+            let text = await speech.stop()
+            draft = text
+            if !text.isEmpty { submit() }
+        } else {
+            speech.language = SpeechLanguage(rawValue: speechLanguage) ?? .english
+            draft = ""
+            await speech.start()
+        }
     }
 
     private var hint: some View {
