@@ -1,153 +1,103 @@
-# Expenses — project report
+# Expenses: project report
 
-Prepared for Magna AI by Abdulghani Mikati. Native macOS expense tracker with AI extraction and an AI chat assistant, built on 17 November 2026 from an empty folder, with Claude Code driving the implementation under a written specification (`CLAUDE.md`).
+Expenses is a native macOS app that reads invoices, stores them as expenses, draws the graphs, and lets the user ask questions and control the app by typing or speaking. It was built on 17 November 2026 with Claude Code, working from a written specification (`CLAUDE.md`).
 
-## Brief vs delivered
+## 1. Brief and what was delivered
 
-| Brief | Delivered | Notes |
-|---|---|---|
-| Import invoices (PDF and image), extract structured expenses | Yes | PDFKit text or vision; strict tool schema; 3 files in parallel |
-| Store expenses with vendor, VAT number, invoice number, date, amounts, category | Yes | SwiftData; plus review flags and correction marker |
-| Dashboard with KPIs and charts, period and granularity filters | Yes | Added custom date range, hover details, empty-period banner |
-| Chat that answers questions and controls the app | Yes | 8 tools, numbers only from ExpenseStore, confirmed delete |
-| Semantic search over invoice contents | Yes | On-device embeddings, hybrid scoring, keyword fallback |
-| Dictation, English and Arabic, input only | Yes | On-device where supported; auto-send on stop |
-| Validation, duplicate detection, review workflow | Yes | Arithmetic, VAT rate, date checks; one self-correction round |
-| Token usage and cost visibility | Yes | Per answer and per session |
-| Accuracy measurement | Yes | Evaluation window; 20 labelled Saudi receipts; Markdown export |
-| Release build and documentation | Yes | Release zip, README, this report, PDFs |
-| Open-source model on device | No | 8 GB of RAM is not enough; see Limitations |
-| Re-run of extraction after the watermark fix; agent test run | Pending | Listed under Next steps |
-
-## 1. What was built
-
-| Area | Delivered |
+| What was asked | What was delivered |
 |---|---|
-| Import and extraction | PDF and image invoices, three in parallel; PDFKit text for digital PDFs, vision for scans and photos; a strict JSON-schema tool returns twelve fields; arithmetic, VAT-rate and date validation; one self-correction round; review flags; duplicate detection |
-| Storage | SwiftData models `Expense` and `InvoiceChunk`, Keychain for the API key |
-| Dashboard | KPI cards, spending over time on a date axis, category donut, top vendors, hover details, four period presets plus a custom range, category filter |
-| Invoices | Sortable table, search, period filter, badge for items needing review, edit sheet, confirmed delete |
-| Chat agent | Tool-use loop (max 6 steps) with eight tools; session history; pending-delete confirmation; tokens and seconds per answer |
-| Semantic search | 500-character chunks embedded on device with `NLEmbedding`; hybrid cosine plus keyword scoring; keyword fallback |
-| Dictation | `SFSpeechRecognizer` and `AVAudioEngine`, live transcript, English and Arabic, auto-send on stop |
-| Quality and cost | Model routing (Haiku 5.5 for extraction, Sonnet 5.5 for chat), token usage per answer and per session, an Evaluation window with extraction and agent tests and Markdown export |
-| Tooling | Sample invoice generator with ground truth, dataset preparation script, release script |
+| A Mac app called Expenses | Native macOS app written in SwiftUI |
+| Upload invoices | Import of PDFs and images; the fields are extracted and checked automatically |
+| Invoices added to the RAG | Every invoice is indexed on import and searchable from the chat |
+| Ask AI about expenses by month, day and so on | Chat answers by day, month, year, category or vendor |
+| Graphs | Dashboard with spending over time, by category and by vendor |
+| Full control by chatting | Chat adds, edits and deletes expenses and changes the graphs and screens |
+| Voice | Dictation in English and Arabic, sent through the same chat |
+| A PDF of what was done, how, and the frameworks | This report |
 
-About 2,900 lines of Swift in 36 files, each under 200 lines, plus three Python tools.
+Three things were added beyond the brief because they make the app trustworthy: automatic checks on every extracted invoice, duplicate detection, and a built-in evaluation screen that measures extraction accuracy.
 
 <figure>
 <img src="docs/images/dashboard.png" alt="Dashboard">
-<figcaption>Figure 1. The dashboard: KPI cards, spending per month for the past year, category donut (hovering Software), top vendors.</figcaption>
+<figcaption>Figure 1. The dashboard: totals, spending per month for the past year, spending by category, top vendors.</figcaption>
 </figure>
 
 ## 2. How it works
 
-**Import.** `InvoiceImporter` takes the picked files and runs up to three `InvoiceExtractor` tasks at once. For a PDF with text, PDFKit's text is sent as a message; otherwise the file goes as a base64 document or image block. The system prompt describes Saudi simplified tax invoices, tells the model to call the `record_invoice` tool, and names the watermarks found on sample data so they are not mistaken for a reason to refuse. The tool uses a strict schema, so the arguments are guaranteed to match. The result passes through `InvoiceValidator` (subtotal + VAT = total within 0.05, VAT ≈ 15%, date within the last five years and not in the future, vendor and total present). On failure the checks are returned to the model as the tool result and it re-reads once; if it still fails, the expense is saved with `needsReview` and notes. `ExpenseStore.add` saves the expense and `RAGService.index` chunks and embeds its text.
+**In one sentence.** An invoice goes in, Claude reads it, the app checks the result and saves it, and the chat answers questions by calling a small set of tools that read or change the saved data.
 
-**Numbers.** Every figure on screen or in chat comes from `ExpenseStore`: `list`, `aggregate(by:)`, `total`. The dashboard reads them through `DashboardData.load`, and the agent reads them through the `query_spending` tool. The model never computes a sum.
+**Importing an invoice.** If a PDF contains text, the text is sent to Claude; scans and photos are sent as images. Claude must reply through a fixed form (a tool with a strict schema), so the app always receives the same twelve fields. The app then checks that subtotal plus VAT equals the total, that VAT is about 15%, and that the date is sensible. If a check fails, Claude is shown the failure and re-reads the invoice once. If it still fails, the expense is saved with a "Needs review" badge so nothing wrong passes silently.
 
-**Chat.** `AgentService` keeps the conversation as Messages API turns. Each user message runs a loop: send history plus the eight tool definitions, execute every `tool_use` block through `AgentTools`, append the `tool_result` blocks, repeat until the model answers in text or six steps pass. Tools call `ExpenseStore`, `RAGService` or mutate `AppState`, which SwiftUI observes, so "show me last year by month" changes the dashboard immediately. `delete_expense` only records a pending action; the chat shows Delete and Cancel buttons and the store is touched only on Delete.
+**Numbers never come from the model.** Every total on the dashboard or in the chat is calculated by the database layer (`ExpenseStore`). Language models are unreliable at arithmetic, so the model only decides which calculation to request and then words the answer.
+
+**RAG.** The text of each invoice is split into passages of about 500 characters and embedded on the Mac. When a question is about what an invoice contains, such as "What did I buy from Nahdi Pharmacy?", the closest passages are retrieved and given to Claude. Retrieval is used for content questions only, and never for totals.
+
+**Chat and control.** The chat gives Claude eight tools: query spending, list expenses, search invoices, add, update and delete an expense, show a chart, and open a screen. Claude chooses the tools, the app runs them and returns the results, and this repeats for at most six steps until Claude answers. Because the chart and screen tools change the same state the interface observes, "show me last year by month" updates the dashboard immediately. A delete is never carried out by the model: the chat shows Delete and Cancel buttons and waits for a click.
 
 <figure class="half">
 <img src="docs/images/chat-language-switch.png" alt="Chat with the EN/AR switch">
 <img src="docs/images/chat-questions.png" alt="Two chat answers">
-<figcaption>Figure 2. Chat answers with the tool, tokens and seconds under each; the EN/AR dictation switch in the header.</figcaption>
+<figcaption>Figure 2. Chat answers, each showing the tool used, the tokens and the time taken. The EN/AR switch sets the dictation language.</figcaption>
 </figure>
 
-**Dictation.** `SpeechService` requests microphone and speech permissions, taps the audio engine, and streams partial results into the text field. On stop it waits up to 1.5 s for the final transcript and sends it through the same `AgentService.send` as typed text.
+**Voice.** The microphone button transcribes speech live into the message field using Apple's speech recognition. On stop, the text is sent through exactly the same path as a typed message, so anything that can be typed can be spoken.
 
 <figure class="half">
 <img src="docs/images/dictation-arabic.png" alt="Arabic dictation">
-<figcaption>Figure 3. Dictating in Arabic: the live transcript fills the field while the red stop button pulses.</figcaption>
+<figcaption>Figure 3. Dictating in Arabic, with the live transcript filling the message field.</figcaption>
 </figure>
 
-## 3. Frameworks and why
+## 3. Frameworks
+
+No third-party packages were used. Everything except the language model is an Apple framework that ships with macOS.
 
 | Framework | Used for | Why |
 |---|---|---|
-| SwiftUI | All views, the settings scene, the evaluation window | Declarative, observes `AppState` and models so agent-driven UI changes need no plumbing |
-| SwiftData | `Expense`, `InvoiceChunk`, cascade delete, lightweight migrations | Native persistence with `@Query` live updates; schema grew twice without data loss |
-| Swift Charts | Bars, donut, horizontal bars, hover selection | Native, accessible, handles date axes and label thinning |
-| PDFKit | Text extraction from digital PDFs | Avoids sending images when text exists; cheaper and exact |
-| NaturalLanguage `NLEmbedding` | Sentence embeddings for invoice chunks | Fully on-device, no data leaves the Mac for search |
-| Speech, AVFoundation | Dictation | On-device recognition for English; Arabic via Apple when needed |
-| Security (Keychain) | API key | Never in code or defaults; app-scoped access |
-| URLSession, Codable | Anthropic Messages API client | No third-party packages; one 150-line client with typed errors |
-| Observation (`@Observable`) | `AppState`, services | Fine-grained updates with little boilerplate |
+| SwiftUI | The whole interface | Native Mac app; the screen updates itself when the chat changes the app's state |
+| SwiftData | Storing expenses and invoice passages | Built-in database with live updates to the interface |
+| Swift Charts | The three graphs | Native charts with date axes and hover details |
+| PDFKit | Reading text from PDFs | Exact and free, so images are sent only when needed |
+| NaturalLanguage | Embeddings for RAG | Runs on the Mac, so search data never leaves it |
+| Speech and AVFoundation | Dictation | On-device recognition where the language supports it |
+| Keychain | The API key | The key is never stored in code or in plain files |
+| Claude API | Reading invoices and running the chat | Called directly over HTTPS from one small client file |
 
-## 4. Why Claude, and what is sent
+Two Claude models are used: `claude-haiku-5-5` for extraction, because it is fast and inexpensive, and `claude-sonnet-5-5` for the chat, because it plans tool use better.
 
-Claude is used for two jobs that rules cannot do well: reading messy, bilingual, variably laid-out invoices, and understanding natural-language requests and mapping them to tools. Two models are used: `claude-haiku-5-5` for extraction (cheap, fast, strong on structured output) and `claude-sonnet-5-5` for the chat agent (better tool planning and wording).
+**What is sent to Claude.** For extraction, only the invoice being imported. For chat, the conversation and the results of the tools it called, which contain only the rows or totals the question needed. The database is never sent whole, and embeddings are computed on the Mac.
 
-Data sent to the API, per request:
+## 4. How it was built
 
-- **Extraction**: the invoice text or image, the system prompt, the tool schema. Nothing else from the database.
-- **Chat**: the conversation so far, the system prompt (today's date, currency, rules), the tool definitions, and the results of tools the model called. Tool results contain only the rows or totals the question needed, for example "2026-10: 1230.52 SAR (2 invoices)" or the passages returned by search. The database is never sent whole.
-- **Never sent**: the API key beyond the request header, file paths, Keychain contents, anything from other apps.
+The app was built with Claude Code in five phases. Each phase had its own prompt with a goal, a numbered build list and a "done when" test, and the conversation was cleared between phases to keep token use low.
 
-Embeddings for search are computed on device and never leave the Mac. Dictation audio is processed on device when the language supports it.
+1. Invoices in, expenses out: data model, API client, extraction, invoices table.
+2. Dashboard: totals and three charts.
+3. Chat and control: RAG, tools and the tool loop.
+4. Voice: speech service and language switch.
+5. Release: build, documentation and this report.
 
-## 5. Development approach
+A fixed set of rules in `CLAUDE.md` kept the code consistent across phases: numbers only from the database layer, no third-party packages, every file under 200 lines, and a clean build before a phase could end. The result is about 2,900 lines of Swift in 36 files.
 
-The app was built with Claude Code in five phased prompts, each with a goal, a numbered build list and a "done when" line, following `CLAUDE.md` as the standing specification:
+## 5. Testing
 
-1. **Invoices in, expenses out**: model, Keychain, API client, extractor, store, invoices table.
-2. **Dashboard**: `AppState`, sidebar, KPIs and three charts.
-3. **Chat and control**: RAG, agent tools and loop, chat panel.
-4. **Voice**: speech service, microphone button, language switch.
-5. **Release**: polish, Release build, documentation.
+After each phase the app was tested by hand: importing the 15 sample invoices and checking the values against the PDFs, comparing dashboard totals with queries run directly on the database, asking the chat to answer, add, edit and delete, and dictating commands in English and Arabic.
 
-Between phases came polish passes driven by hands-on testing: validation with self-correction, duplicate prompts, review badges, token usage, model routing, chart hover and date axes, table sorting and search, and the Evaluation window.
+Extraction accuracy was also measured in the app's Evaluation screen on 20 synthetic Saudi receipts in Arabic and English (Bayanat Labs dataset, CC BY 4.0): 99.3% field accuracy, with vendor, VAT number, date and all amounts read correctly every time. The evaluation screen exists to confirm that the model is working, which it is; the exported results are in `tools/evaluation.md`.
 
-Working rules that mattered: numbers only from `ExpenseStore`; no third-party packages; files under 200 lines; never edit the Xcode project file by hand; build with `xcodebuild` after every phase and fix every error before stopping; every change ends with a list of files and a manual test script.
+## 6. Limitations
 
-## 6. Testing
+- **No local model.** The intention was to run an open-source model on the Mac for data sovereignty. The development machine has 8 GB of RAM, which is not enough for a model that reads invoices reliably, so Claude is used for extraction and chat while search and dictation stay on the device. The model is reached through a single file (`ClaudeClient`), which is the only part to replace.
+- **Needs internet** for importing and chatting. Saved data can still be browsed offline.
+- **Arabic search is by keyword.** Apple's on-device embeddings are English-only.
+- **Single user and single currency.** There are no accounts or sync, and totals assume SAR.
+- **Not notarised.** The first launch has to be approved in System Settings.
+- **Tested on synthetic data**, not on photographs of real receipts.
 
-**Build**: `xcodebuild` Debug after every change and Release for the package, both clean with no warnings in app code.
+## 7. Next steps
 
-**Manual tests after each phase**: import of 15 generated PDFs with values checked against the PDFs; edit and cancel; delete with confirmation; dashboard figures compared with SQL run directly on the SwiftData store for each period preset; the four chat scenarios from the specification ("How much did I spend last month?", "Show my expenses for the past year by month", "What did I buy from Nahdi Pharmacy?", "Add an expense of 50 SAR for coffee today"); dictation of "show me last year's expenses by month"; duplicate import prompt; a deliberately wrong total showing the review badge.
+1. Data sovereignty: add a setting to send extraction and chat to a self-hosted or in-Kingdom model.
+2. Arabic semantic search: multilingual embeddings in place of the English-only ones.
+3. Evaluation: add real receipts.
+4. Real-time voice and multiple users: streamed answers, accounts and sync.
 
-**Offline checks**: the API request and response shapes were verified by compiling the client types into a script and inspecting the JSON; schema migrations were tested by opening a copy of the real store with the new models; RAG search was probed with three questions; the validator and ground-truth comparer were exercised with good and bad inputs.
-
-**Evaluation window**: extraction against 20 synthetic Saudi receipts from the Bayanat Labs dataset (CC BY 4.0, Arabic and English, some with Arabic-Indic numerals), first run with `claude-haiku-5-5`:
-
-| Metric | Result |
-|---|---|
-| Files scored | 17 of 20 (3 refused as "placeholder", fixed afterwards) |
-| Field accuracy | 99.3% overall |
-| Vendor, VAT number, date, subtotal, VAT, total, currency | 100% |
-| Invoice number | 94.1% (one placeholder) |
-| Average time per receipt | 13.8 s |
-| Tokens | 87,886 in total, about 4,400 per receipt |
-
-The three failures all had the dataset's footer "Synthetic research sample — not a valid tax invoice". The prompt now names that watermark and a placeholder answer gets one retry; the re-run and the six-question agent test are the next items to execute.
-
-**Bugs found and fixed by testing**: Claude filled placeholders on invoices marked "fictional sample"; the self-correction turn omitted the required `tool_result` block (HTTP 400); the dashboard could not reach data from 2023 with relative periods only; a Release of the sandbox lacked the entitlements for network, microphone and save panels.
-
-## 7. Limitations
-
-- **No local model.** The plan was to run an open-source model on the Mac for data sovereignty. The development machine has 8 GB of RAM, and once Xcode and the app are running there is no room for a capable local model: a 7B-parameter text model needs about 5 GB even at 4-bit quantisation, and reading invoice images needs a vision model on top. Smaller models that would fit misread amounts and VAT numbers. Claude was therefore used for extraction and chat, with everything else kept on device, and `ClaudeClient` is the one file to replace when a local or in-Kingdom endpoint is available.
-- **Needs internet.** Extraction and chat stop without a connection; browsing saved data still works.
-- **Arabic search is keyword-only.** Apple's on-device sentence embeddings are English-only, so Arabic invoice text is matched by words, not meaning.
-- **Single user, single Mac.** One sandboxed database, no accounts, no sync, no backup beyond Time Machine.
-- **Unsigned build.** The release is signed ad hoc and not notarised; the first launch goes through System Settings → Privacy & Security → Open Anyway.
-- **Evaluation is synthetic.** Accuracy was measured on generated PDFs and synthetic Saudi receipts, not on photographed receipts from real shops.
-- **One currency.** Other currencies are stored but totals assume SAR.
-- **Cost depends on usage.** Every import and question is an API call billed to the key owner; a busy month of a few hundred invoices and questions costs on the order of a few dollars.
-
-## 8. Next steps
-
-1. **Data sovereignty.** Add a provider setting so extraction and chat can go to a self-hosted model or an in-Kingdom endpoint; on a 16 GB or larger Mac, test an open-weight vision model locally through the same `ClaudeClient` interface.
-2. **Multilingual embeddings** for Arabic search, either a small on-device model or a hosted embedding API, behind `RAGService`.
-3. **Real-time voice**: streamed answers and barge-in instead of stop-then-send.
-4. **Authentication and sync** for several users or devices.
-5. **Evaluation on real receipts** and the pending re-run of the agent test, with results folded into this report.
-6. **Backlog items** in `BACKLOG.md`: bulk import performance, extraction effort setting for speed versus accuracy.
-
-## 9. Where to look
-
-- `CLAUDE.md`: the specification and rules
-- `README.md`: setup, running, features, tools, limitations, next steps
-- `BACKLOG.md`: open polish items
-- `docs/datasets.md`: candidate datasets for further evaluation
-- `tools/evaluation.md`: the exported evaluation report
+The source code, the specification (`CLAUDE.md`), the setup guide (`README.md`) and the exported evaluation (`tools/evaluation.md`) are in the GitHub repository.
