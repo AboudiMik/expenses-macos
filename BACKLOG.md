@@ -1,14 +1,13 @@
 # Backlog
 
-Items noted during earlier phases, to be picked up in phase 5 (polishing) unless pulled forward.
+Items noted during earlier phases. Done items are kept for reference.
 
-## Dashboard
-- Day granularity: bar labels are unreadable with sparse data. Options: date axis with
-  thinned labels, or fill empty days with zero bars so the spacing is even.
-- Hover tooltip on all three charts showing the exact value (ChartOverlay + chartXSelection).
-- Test the charts against a larger dataset (public invoice/receipt dataset, or extend
-  tools/make_samples.py to generate hundreds of invoices).
+## Done in the polish pass (2026-11-17)
+- Day granularity readable: timeline uses a real date axis with automatic label thinning and a fixed domain for bounded periods.
+- Hover on all three charts: timeline rule + tooltip, donut sector highlight with centre readout, vendor bar highlight with count.
+- Generator: `tools/make_samples.py --count 300 --months 24 --out <dir>` for bulk data.
+- Invoices table: click column headers to sort, search field, period filter in the toolbar.
 
-## Invoices
-- Sort the table by any column (date, vendor, total, category) via Table sortOrder.
-- Search and date-range filter in the toolbar.
+## Open
+- Import a bulk sample set and sanity-check chart performance with a few hundred rows.
+- Try a real public dataset (see docs/datasets.md) for extraction accuracy.

@@ -5,6 +5,7 @@ Vendors, VAT numbers and amounts are fictional. Dates spread across the
 last 14 months; categories rotate through the app's eight categories.
 Run with a fixed seed so the output is reproducible.
 """
+import argparse
 import random
 from datetime import date, timedelta
 from pathlib import Path
@@ -98,6 +99,17 @@ def spread_dates(rng, count, months=14):
                   for i in range(count))
 
 
+_used_numbers = set()
+
+
+def unique_invoice_number(rng, year):
+    while True:
+        number = f"INV-{year}-{rng.randint(1000, 9999)}"
+        if number not in _used_numbers:
+            _used_numbers.add(number)
+            return number
+
+
 def build_invoice(rng, index, inv_date):
     category = CATEGORIES[index % len(CATEGORIES)]
     vendors, items = CATALOG[category]
@@ -115,7 +127,7 @@ def build_invoice(rng, index, inv_date):
         "vendor": vendor,
         "city": rng.choice(CITIES),
         "vat_number": vat_number(rng),
-        "invoice_number": f"INV-{inv_date.year}-{rng.randint(1000, 9999)}",
+        "invoice_number": unique_invoice_number(rng, inv_date.year),
         "date": inv_date,
         "lines": lines,
         "subtotal": subtotal,
@@ -190,18 +202,26 @@ def draw_invoice(path, inv):
 
 
 def main():
-    rng = random.Random(SEED)
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for old in OUT_DIR.glob("*.pdf"):
+    parser = argparse.ArgumentParser(description="Generate sample Saudi simplified tax invoices.")
+    parser.add_argument("--count", type=int, default=COUNT, help="number of invoices (default 15)")
+    parser.add_argument("--months", type=int, default=14, help="spread dates over the last N months")
+    parser.add_argument("--out", type=Path, default=OUT_DIR, help="output folder (default tools/samples)")
+    parser.add_argument("--seed", type=int, default=SEED)
+    args = parser.parse_args()
+
+    rng = random.Random(args.seed)
+    args.out.mkdir(parents=True, exist_ok=True)
+    for old in args.out.glob("*.pdf"):
         old.unlink()
-    dates = spread_dates(rng, COUNT)
+    width = max(2, len(str(args.count)))
+    dates = spread_dates(rng, args.count, months=args.months)
     for i, inv_date in enumerate(dates):
         inv = build_invoice(rng, i, inv_date)
         slug = inv["vendor"].lower().replace(" ", "_").replace(".", "")
-        path = OUT_DIR / f"{i + 1:02d}_{inv_date.isoformat()}_{slug}.pdf"
+        path = args.out / f"{i + 1:0{width}d}_{inv_date.isoformat()}_{slug}.pdf"
         draw_invoice(path, inv)
         print(f"{path.name}  {inv['category']:<10} {sar(inv['total'])}")
-    print(f"\n{COUNT} invoices written to {OUT_DIR}")
+    print(f"\n{args.count} invoices written to {args.out}")
 
 
 if __name__ == "__main__":

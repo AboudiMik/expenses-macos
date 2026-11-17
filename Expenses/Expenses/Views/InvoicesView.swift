@@ -11,8 +11,24 @@ struct InvoicesView: View {
     @State private var editing: Expense?
     @State private var confirmingDelete = false
     @State private var reviewOnly = false
+    @State private var searchText = ""
+    @State private var period: Period = .allTime
+    @State private var sortOrder = [KeyPathComparator(\Expense.date, order: .reverse)]
 
-    private var visibleExpenses: [Expense] { reviewOnly ? expenses.filter(\.needsReview) : expenses }
+    private var visibleExpenses: [Expense] {
+        let range = period.range()
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        return expenses.filter { expense in
+            (!reviewOnly || expense.needsReview)
+            && (range.from.map { expense.date >= $0 } ?? true)
+            && (range.to.map { expense.date <= $0 } ?? true)
+            && (query.isEmpty || expense.vendor.localizedCaseInsensitiveContains(query)
+                || expense.invoiceNumber.localizedCaseInsensitiveContains(query)
+                || expense.details.localizedCaseInsensitiveContains(query)
+                || expense.category.localizedCaseInsensitiveContains(query))
+        }
+        .sorted(using: sortOrder)
+    }
 
     private var selectedExpenses: [Expense] { expenses.filter { selection.contains($0.id) } }
 
@@ -22,6 +38,7 @@ struct InvoicesView: View {
             table
         }
         .navigationTitle("Invoices")
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Vendor, invoice number, item or category")
         .toolbar { toolbarContent }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.pdf, .image],
                       allowsMultipleSelection: true) { result in
@@ -73,38 +90,16 @@ struct InvoicesView: View {
     }
 
     private var table: some View {
-        Table(visibleExpenses, selection: $selection) {
-            TableColumn("Date") { Text($0.date, format: .dateTime.day().month(.abbreviated).year()) }
-                .width(min: 90, ideal: 100)
-            TableColumn("Vendor") { expense in
-                HStack(spacing: 6) {
-                    Text(expense.vendor)
-                    if expense.needsReview {
-                        Text("Needs review").font(.caption2).padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(.orange.opacity(0.25), in: Capsule()).help(expense.reviewNotes)
-                    }
-                }
-            }
-            TableColumn("Invoice #", value: \.invoiceNumber).width(min: 90, ideal: 120)
-            TableColumn("Category", value: \.category).width(min: 80, ideal: 100)
-            TableColumn("VAT") { Text($0.vatAmount, format: .number.precision(.fractionLength(2))) }
-                .width(min: 70, ideal: 80)
-            TableColumn("Total") { Text($0.total, format: .currency(code: $0.currency)) }
-                .width(min: 100, ideal: 120)
-            TableColumn("File", value: \.fileName)
-        }
-        .contextMenu(forSelectionType: PersistentIdentifier.self) { ids in
-            Button("Edit") { editFirst(of: ids) }.disabled(ids.count != 1)
-            Button("Delete", role: .destructive) { selection = ids; confirmingDelete = true }
-        } primaryAction: { ids in
-            editFirst(of: ids)
-        }
+        ExpenseTable(expenses: visibleExpenses, selection: $selection, sortOrder: $sortOrder,
+                     onEdit: { editFirst(of: $0) },
+                     onDelete: { selection = $0; confirmingDelete = true })
         .overlay {
             if expenses.isEmpty && !importer.isRunning {
                 ContentUnavailableView("No invoices yet", systemImage: "doc.text",
                                        description: Text("Click Import to add PDF or image invoices."))
             } else if visibleExpenses.isEmpty {
-                ContentUnavailableView("Nothing needs review", systemImage: "checkmark.circle")
+                ContentUnavailableView(reviewOnly ? "Nothing needs review" : "No matching invoices",
+                                       systemImage: reviewOnly ? "checkmark.circle" : "magnifyingglass")
             }
         }
     }
@@ -114,6 +109,12 @@ struct InvoicesView: View {
         ToolbarItem {
             Button { showingImporter = true } label: { Label("Import", systemImage: "square.and.arrow.down") }
                 .disabled(importer.isRunning)
+        }
+        ToolbarItem {
+            Picker("Period", selection: $period) {
+                ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .help("Show only invoices dated in this period")
         }
         ToolbarItem {
             Toggle(isOn: $reviewOnly) { Label("Needs review", systemImage: "exclamationmark.triangle") }
