@@ -19,6 +19,8 @@ nonisolated struct ChatMessage: Identifiable {
 final class AgentService {
     var messages: [ChatMessage] = []
     var isWorking = false
+    /// The last API or tool failure, for an alert; cleared by the UI.
+    var lastError: String?
     private(set) var pendingDelete: Expense?
 
     private var tools: AgentTools
@@ -82,7 +84,8 @@ final class AgentService {
                 history.append(.user(results))
             }
         } catch {
-            answer = answer.isEmpty ? error.localizedDescription : answer + "\n\n" + error.localizedDescription
+            lastError = error.localizedDescription
+            answer = answer.isEmpty ? "Sorry, that request failed: \(error.localizedDescription)" : answer
             history.removeSubrange(historyStart...)   // keep history valid for the next turn
         }
         var reply = ChatMessage(role: .assistant, text: answer.isEmpty ? "Done." : answer, toolsUsed: toolsUsed,

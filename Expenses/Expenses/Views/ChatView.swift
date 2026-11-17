@@ -52,7 +52,7 @@ struct ChatView: View {
                     .buttonStyle(.plain)
                     .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || agent.isWorking || speech.isRecording)
             }
-            .padding(10)
+            .padding(12)
             .background(speech.isRecording ? Color.red.opacity(0.08) : Color.clear)
         }
         .background(.background)

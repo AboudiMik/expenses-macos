@@ -5,6 +5,7 @@ struct MainView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @State private var agent: AgentService?
+    @State private var showWelcome = false
 
     var body: some View {
         @Bindable var appState = appState
@@ -29,10 +30,18 @@ struct MainView: View {
             }
         }
         .frame(minWidth: 1180, minHeight: 600)
+        .sheet(isPresented: $showWelcome) { WelcomeSheet() }
+        .alert("Claude request failed", isPresented: Binding(
+            get: { agent?.lastError != nil }, set: { if !$0 { agent?.lastError = nil } })) {
+            Button("OK") { agent?.lastError = nil }
+        } message: {
+            Text(agent?.lastError ?? "")
+        }
         .task {
             let store = ExpenseStore(context: modelContext)
             if agent == nil { agent = AgentService(store: store, appState: appState) }
             try? store.rag.indexMissing()
+            if KeychainStore.loadAPIKey()?.isEmpty ?? true { showWelcome = true }
         }
     }
 }

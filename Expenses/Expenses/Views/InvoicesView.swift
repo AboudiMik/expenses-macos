@@ -86,7 +86,7 @@ struct InvoicesView: View {
             Text("Processing \(importer.completed)/\(importer.total): \(importer.currentFiles.joined(separator: ", "))")
                 .font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
-        .padding(.horizontal).padding(.vertical, 8)
+        .padding(.horizontal, 20).padding(.vertical, 10)
     }
 
     private var table: some View {
