@@ -42,7 +42,7 @@ Rules the code follows: every number shown or spoken comes from `ExpenseStore`; 
 ## Setup
 
 ```sh
-git clone <this repo> ExpensesWorkspace
+git clone https://github.com/AboudiMik/expenses-macos.git ExpensesWorkspace
 cd ExpensesWorkspace
 open Expenses/Expenses.xcodeproj
 ```
