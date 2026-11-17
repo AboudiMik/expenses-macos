@@ -35,6 +35,11 @@ Prepared for Magna AI by Abdulghani Mikati. Native macOS expense tracker with AI
 
 About 2,900 lines of Swift in 36 files, each under 200 lines, plus three Python tools.
 
+<figure>
+<img src="docs/images/dashboard.png" alt="Dashboard">
+<figcaption>Figure 1. The dashboard: KPI cards, spending per month for the past year, category donut (hovering Software), top vendors.</figcaption>
+</figure>
+
 ## 2. How it works
 
 **Import.** `InvoiceImporter` takes the picked files and runs up to three `InvoiceExtractor` tasks at once. For a PDF with text, PDFKit's text is sent as a message; otherwise the file goes as a base64 document or image block. The system prompt describes Saudi simplified tax invoices, tells the model to call the `record_invoice` tool, and names the watermarks found on sample data so they are not mistaken for a reason to refuse. The tool uses a strict schema, so the arguments are guaranteed to match. The result passes through `InvoiceValidator` (subtotal + VAT = total within 0.05, VAT ≈ 15%, date within the last five years and not in the future, vendor and total present). On failure the checks are returned to the model as the tool result and it re-reads once; if it still fails, the expense is saved with `needsReview` and notes. `ExpenseStore.add` saves the expense and `RAGService.index` chunks and embeds its text.
@@ -43,7 +48,18 @@ About 2,900 lines of Swift in 36 files, each under 200 lines, plus three Python 
 
 **Chat.** `AgentService` keeps the conversation as Messages API turns. Each user message runs a loop: send history plus the eight tool definitions, execute every `tool_use` block through `AgentTools`, append the `tool_result` blocks, repeat until the model answers in text or six steps pass. Tools call `ExpenseStore`, `RAGService` or mutate `AppState`, which SwiftUI observes, so "show me last year by month" changes the dashboard immediately. `delete_expense` only records a pending action; the chat shows Delete and Cancel buttons and the store is touched only on Delete.
 
+<figure class="half">
+<img src="docs/images/chat-language-switch.png" alt="Chat with the EN/AR switch">
+<img src="docs/images/chat-questions.png" alt="Two chat answers">
+<figcaption>Figure 2. Chat answers with the tool, tokens and seconds under each; the EN/AR dictation switch in the header.</figcaption>
+</figure>
+
 **Dictation.** `SpeechService` requests microphone and speech permissions, taps the audio engine, and streams partial results into the text field. On stop it waits up to 1.5 s for the final transcript and sends it through the same `AgentService.send` as typed text.
+
+<figure class="half">
+<img src="docs/images/dictation-arabic.png" alt="Arabic dictation">
+<figcaption>Figure 3. Dictating in Arabic: the live transcript fills the field while the red stop button pulses.</figcaption>
+</figure>
 
 ## 3. Frameworks and why
 

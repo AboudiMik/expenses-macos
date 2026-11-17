@@ -88,6 +88,19 @@ The app needs a Claude API key, which is sent to you separately from this zip an
 
 The sample PDFs are generated and fictional; the evaluation receipts are synthetic documents from the Bayanat Labs dataset (CC BY 4.0).
 
+## Screenshots
+
+<figure>
+<img src="docs/images/dashboard.png" alt="Dashboard: KPI cards, spending per month, category donut, top vendors">
+<figcaption>Dashboard in dark mode: KPI cards, spending per month on a date axis, category donut with the hovered sector, top vendors.</figcaption>
+</figure>
+
+<figure class="half">
+<img src="docs/images/chat-questions.png" alt="Chat answering two questions with the tools, tokens and seconds used">
+<img src="docs/images/dictation-arabic.png" alt="Arabic dictation in progress">
+<figcaption>Left: two chat answers, each with the tools, tokens and time used. Right: dictating a question in Arabic.</figcaption>
+</figure>
+
 ## Features
 
 - **Import**: PDFs and images (PNG, JPEG, HEIC and more), three at a time with progress. Text PDFs are read with PDFKit; scans and photos go to Claude as images.

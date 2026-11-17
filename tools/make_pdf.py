@@ -7,6 +7,7 @@ The first H1 becomes the title; the first paragraph becomes the lead.
 """
 import argparse
 import pathlib
+import re
 import subprocess
 import tempfile
 
@@ -32,6 +33,10 @@ def main():
     body = "\n".join(lines[1:] if lines[0].startswith("# ") else lines).strip()
     lead, rest = (body.split("\n\n", 1) + [""])[:2]
     html_body = markdown.markdown(rest, extensions=["tables", "fenced_code", "sane_lists"])
+    # images are referenced relative to the Markdown file; make them absolute for the temp HTML
+    base = a.source.resolve().parent
+    html_body = re.sub(r'src="(?!https?://|file://|/)([^"]+)"',
+                       lambda m: f'src="{(base / m.group(1)).as_uri()}"', html_body)
     lead_html = markdown.markdown(lead)
     page = f"""<!doctype html><html><head><meta charset="utf-8"><title>{title}</title>
 <style>{CSS.read_text()}</style></head><body>
