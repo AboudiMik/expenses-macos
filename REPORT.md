@@ -91,7 +91,27 @@ The three failures all had the dataset's footer "Synthetic research sample — n
 
 **Bugs found and fixed by testing**: Claude filled placeholders on invoices marked "fictional sample"; the self-correction turn omitted the required `tool_result` block (HTTP 400); the dashboard could not reach data from 2023 with relative periods only; a Release of the sandbox lacked the entitlements for network, microphone and save panels.
 
-## 7. Where to look
+## 7. Limitations
+
+- **No local model.** The plan was to run an open-source model on the Mac for data sovereignty. The development machine has 8 GB of RAM, and once Xcode and the app are running there is no room for a capable local model: a 7B-parameter text model needs about 5 GB even at 4-bit quantisation, and reading invoice images needs a vision model on top. Smaller models that would fit misread amounts and VAT numbers. Claude was therefore used for extraction and chat, with everything else kept on device, and `ClaudeClient` is the one file to replace when a local or in-Kingdom endpoint is available.
+- **Needs internet.** Extraction and chat stop without a connection; browsing saved data still works.
+- **Arabic search is keyword-only.** Apple's on-device sentence embeddings are English-only, so Arabic invoice text is matched by words, not meaning.
+- **Single user, single Mac.** One sandboxed database, no accounts, no sync, no backup beyond Time Machine.
+- **Unsigned build.** The release is signed ad hoc and not notarised; it needs right-click → Open.
+- **Evaluation is synthetic.** Accuracy was measured on generated PDFs and synthetic Saudi receipts, not on photographed receipts from real shops.
+- **One currency.** Other currencies are stored but totals assume SAR.
+- **Cost depends on usage.** Every import and question is an API call billed to the key owner; a busy month of a few hundred invoices and questions costs on the order of a few dollars.
+
+## 8. Next steps
+
+1. **Data sovereignty.** Add a provider setting so extraction and chat can go to a self-hosted model or an in-Kingdom endpoint; on a 16 GB or larger Mac, test an open-weight vision model locally through the same `ClaudeClient` interface.
+2. **Multilingual embeddings** for Arabic search, either a small on-device model or a hosted embedding API, behind `RAGService`.
+3. **Real-time voice**: streamed answers and barge-in instead of stop-then-send.
+4. **Authentication and sync** for several users or devices.
+5. **Evaluation on real receipts** and the pending re-run of the agent test, with results folded into this report.
+6. **Backlog items** in `BACKLOG.md`: bulk import performance, extraction effort setting for speed versus accuracy.
+
+## 9. Where to look
 
 - `CLAUDE.md`: the specification and rules
 - `README.md`: setup, running, features, tools, limitations, next steps
