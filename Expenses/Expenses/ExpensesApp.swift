@@ -1,23 +1,13 @@
-//
-//  ExpensesApp.swift
-//  Expenses
-//
-//  Created by Abdulghani Mikati on 17/11/2026.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
 struct ExpensesApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        let schema = Schema([Expense.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -25,8 +15,12 @@ struct ExpensesApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            InvoicesView()
         }
         .modelContainer(sharedModelContainer)
+
+        Settings {
+            SettingsView()
+        }
     }
 }
